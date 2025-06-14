@@ -1,2 +1,0 @@
-# watchrevo-admin
-# watchrevo-backend
