@@ -7,7 +7,7 @@ const options = {
     keepAlive: 1000,
     useNewUrlParser: true,
     useCreateIndex: true,
-    useFindAndModify:false,
+    useFindAndModify: false,
     useUnifiedTopology: true
 };
 //config.get("database.url").replace('{password}', process.env.DB_PASSWORD

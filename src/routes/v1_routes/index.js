@@ -14,6 +14,8 @@ const lottery = require("../../app/controller/lottery");
 const notification = require("../../app/controller/notification");
 const content = require("../../app/controller/content");
 
+const payment = require("../../app/controller/payment");
+
 router.post("/signup", user.signUp);
 router.post("/login", user.login);
 router.get("/profile", isAuthenticated(['ADMIN', "USER"]), user.me);
@@ -113,4 +115,10 @@ router.get("/getNotification", isAuthenticated(["USER", "ADMIN", "SELLER"]), not
 //content
 router.post("/content", isAuthenticated(["ADMIN"]), content.create);
 router.get("/content", content.getContent);
+
+
+//payment
+router.post('/initiatePayment', payment.initiatePayment)
+router.post('/executePayment', payment.executePayment)
+router.post('/initiatestripe', payment.poststripe)
 module.exports = router;

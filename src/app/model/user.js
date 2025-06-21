@@ -110,6 +110,9 @@ const userSchema = new mongoose.Schema(
     },
     description: {
       type: String,
+    },
+    payment_customer_id: {
+      type: String,
     }
   },
   {
