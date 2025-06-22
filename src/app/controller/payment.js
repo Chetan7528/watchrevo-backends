@@ -49,23 +49,24 @@ const initiatePayment = async (req, res) => {
         );
         const entryRes = parseResponse(responses.data)
         console.log(entryRes)
-        const data = {
-            AccessID: entryRes.AccessID,
-            AccessPass: entryRes.AccessPass,
-            OrderID: orderID,
-            Method: ENUMS.Method.Lump,
-            CardNo: '4100000000000100',
-            Expire: '2612',
-            SecurityCode: '1234'
-        }
+        // const data = {
+        //     AccessID: entryRes.AccessID,
+        //     AccessPass: entryRes.AccessPass,
+        //     OrderID: orderID,
+        //     Method: ENUMS.Method.Lump,
+        //     CardNo: '4100000000100011',
+        //     Expire: '2026',
+        //     SecurityCode: '123',
+        //     JobCd: "CAPTURE"
+        // }
 
-        console.log(data)
-        gmopg.execTran(data).then((execRes) => {
+        // console.log(data)
+        // gmopg.execTran(data).then((execRes) => {
 
-            return response.ok(res, execRes);
-        })
+        //     return response.ok(res, execRes);
+        // })
 
-        // return response.ok(res, execRes);
+        return response.ok(res, entryRes);
     } catch (error) {
         return response.error(res, error);
     }
@@ -108,7 +109,7 @@ const poststripe = async (req, res) => {
         }
         const shipping = req.body.shipping
         let payment_method_types = req.body.paymentMathod || ['card']
-        const priceFormatStripe = Math.round(req.body.price * 100);
+        const priceFormatStripe = Math.round(req.body.price);
         const paymentIntent = await stripe.paymentIntents.create({
             amount: priceFormatStripe,
             currency: req.body.currency,
@@ -118,7 +119,6 @@ const poststripe = async (req, res) => {
             payment_method_types,
             // shipping
         });
-        console.log(paymentIntent)
         const ephemeralKey = await stripe.ephemeralKeys.create(
             { customer: user.payment_customer_id },
             { apiVersion: '2024-04-10' } // use latest API version
