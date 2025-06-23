@@ -98,34 +98,37 @@ const executePayment = async (req, res) => {
 
 const poststripe = async (req, res) => {
     try {
-        let user = await User.findById(req.body.userid)
-        if (!user.payment_customer_id) {
-            const customer = await stripe.customers.create({
-                name: user.fullName,
-                email: user.email,
-            });
-            user.payment_customer_id = customer.id
-            await user.save()
-        }
+        // let user = await User.findById(req.body.userid)
+        // if (!user.payment_customer_id) {
+        //     const customer = await stripe.customers.create({
+        //         name: user.fullName,
+        //         email: user.email,
+        //     });
+        //     user.payment_customer_id = customer.id
+        //     await user.save()
+        // }
+        // const ephemeralKey = await stripe.ephemeralKeys.create(
+        //     { customer: user.payment_customer_id },
+        //     { apiVersion: '2024-04-10' } // use latest API version
+        // );
+
+        // console.log(ephemeralKey)
         const shipping = req.body.shipping
         let payment_method_types = req.body.paymentMathod || ['card']
         const priceFormatStripe = Math.round(req.body.price);
         const paymentIntent = await stripe.paymentIntents.create({
             amount: priceFormatStripe,
             currency: req.body.currency,
-            // automatic_payment_methods: {
-            //   enabled: true,
-            // },
-            payment_method_types,
+            automatic_payment_methods: {
+                enabled: true,
+            },
+            // payment_method_types,
             // shipping
         });
-        const ephemeralKey = await stripe.ephemeralKeys.create(
-            { customer: user.payment_customer_id },
-            { apiVersion: '2024-04-10' } // use latest API version
-        );
+
         res.status(200).send({
             paymentIntent,
-            ephemeralKey
+            // ephemeralKey
         });
     } catch (err) {
         console.log(err);

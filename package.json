@@ -8,7 +8,7 @@
     "start": "pm2 start server.js -i max -f",
     "kill": "pm2 kill",
     "logs": "pm2 log",
-    "restart": "pm2 restart all",
+    "restart": "pm2 restart all --update-env",
     "start:dev": "nodemon server.js",
     "test": "set NODE_ENV=test&&mocha --timeout 15000 --colors --verbose -- __tests__/**/*.js"
   },
