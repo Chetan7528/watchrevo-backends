@@ -45,6 +45,9 @@ const lotterySchema = new mongoose.Schema({
     capacity: {
         type: Number
     },
+    user_capacity: {
+        type: Number
+    },
     soldTicket: {
         type: Number,
         default: 0

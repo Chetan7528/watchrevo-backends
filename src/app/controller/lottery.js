@@ -229,13 +229,14 @@ module.exports = {
                 }
             }
             user[user.rank_type] = Number(user[user.rank_type]) + Number(payload.total);
-            user.wallet[user.rank_type] = Number(user.wallet[user.rank_type]) - Number(payload.total);
-            await user.save()
-            // if (payload.shiping_address) {
-            //     await user.findByIdAndUpdate(req.user.id)
-            //     // , { shiping_address: payload.shiping_address }
-            // }
-            return response.ok(res, { message: 'Lottery placed successfully', cat });
+            user.wallet[product.rank_type] = Number(user.wallet[product.rank_type]) - Number(payload.total);
+            console.log(user)
+            await User.findByIdAndUpdate(req.user.id, user);
+            const data = {
+                lotteryRequest: cat,
+                user
+            }
+            return response.ok(res, { message: 'Lottery placed successfully', data });
         } catch (error) {
             return response.error(res, error);
         }
