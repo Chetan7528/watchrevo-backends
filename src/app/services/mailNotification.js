@@ -80,35 +80,21 @@ module.exports = {
       throw new Error("something went wrong");
     }
   },
-  bookMail: async ({ user, service, type }) => {
-    console.log(user, service, type);
+  inquirymail: async (detail) => {
     try {
-      // const html = `<div><p>Hi Hannah Pullen,</p>\r\n\r\n<p>Your appointment with ADN Cleaning Services is confirmed.</p>\r\n\r\n\r\n\r\n<p>APPOINTMENT DATE \r\n\r\n Fri, Sep 1, 2023</p>\r\n\r\n<p>APPOINTMENT TIME</p><p>9:30 AM - 10:00 AM</p>\r\n\r\n<p>SERVICE ADDRESS</p><p>33B Tarbert Rd, top flat, London SE22 8QB, UK</p>  </div>`;
-      const html = `<div><strong>Dear, ${user.fullName},</strong>
-      <br/>
-      <p>Thank you for choosing ADN Cleaning Services for your upcoming cleaning appointment!</p>
-      <p>Your appointment with ADN Cleaning Services is ${type}. </p>
-      
-      <p style="margin-top:20px">APPOINTMENT DATE</p>
-      <strong>${moment(service.slot.date).format("ddd, MMM DD,YYYY")}
-      </strong>
-      
-      <p style="margin-top:20px">APPOINTMENT TIME
-      </p>
-      <strong>${service.slot.time}
-      </strong>
-      
-      <p style="margin-top:20px">SERVICE ADDRESS</p>
-      <strong>${service.location}
-      </strong></div>
-      
-      <p>To track your service status or make changes, please log in to your account on our  <a href="https://www.adncleaningservices.com/" target="_blank">website</a> .</p>
-      <p>If you have any specific requests or questions, Feel free to download our <a href="https://play.google.com/store/apps/details?id=com.adnuser.app" target="_blank"> ADN User app </a> to stay updated with your booking.</p>
-  
+      const html = `<div>
+      <p>${detail.subject}</p>
+      <p style="margin-top:20px">Name: <strong>${detail.name}</strong></p>
+      <p style="margin-top:20px">Email:  <strong>${detail.email}
+      </strong></p>
+      <p style="margin-top:20px">Phone:  <strong>${detail.phone}</strong></p>
+       <p style="margin-top:20px">OrderId:  <strong>${detail.phone}</strong></p>
+      </div>
+      <p>${detail.description}</p>
       <p>Thanks and Regards</p>
-      <p><strong>ADN Cleaning Services</strong></p>
+      <p><strong>${detail.name}</strong></p>
       `;
-      return await sendMail(user.email, "Appointment Confirmation", html);
+      return await sendMail('watchrevo2023@gmail.com', 'Inquiry Email', html);
     } catch (err) {
       console.log(err);
       throw new Error("something went wrong");
