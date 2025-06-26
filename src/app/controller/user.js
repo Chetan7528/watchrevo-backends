@@ -290,6 +290,8 @@ module.exports = {
             'wallet.Gold': payload.Gold,
             'wallet.Platinam': payload.Platinam,
             'wallet.Diamond': payload.Diamond,
+            'spent_yen': payload.amount,
+            'totalspent_yen': payload.amount,
           }
         },
         {

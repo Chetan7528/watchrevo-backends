@@ -11,7 +11,7 @@ const rankData = {
     'Bronze': 10000,
     'Silver': 100000,
     'Gold': 1000000,
-    'Platinam': 5000000,
+    'Platinam': 3000000,
 }
 
 const nextRank = {
@@ -219,8 +219,8 @@ module.exports = {
             // console.log(cat)
             await cat.save();
 
-            user.totalspent_yen = Number(user.totalspent_yen) + Number(payload.total);
-            user.spent_yen = Number(user.spent_yen) + Number(payload.total);
+            // user.totalspent_yen = Number(user.totalspent_yen) + Number(payload.total);
+            // user.spent_yen = Number(user.spent_yen) + Number(payload.total);
             if (user.rank_type !== 'Diamond') {
                 if (rankData[user.rank_type] < user.spent_yen) {
                     user.spent_yen = 0

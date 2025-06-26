@@ -210,8 +210,8 @@ module.exports = {
       if (payload.shiping_address) {
         u.shiping_address = payload.shiping_address;
       }
-      u.totalspent_yen = Number(u.totalspent_yen) + Number(payload.total);
-      u.spent_yen = Number(u.spent_yen) + Number(payload.total);
+      // u.totalspent_yen = Number(u.totalspent_yen) + Number(payload.total);
+      // u.spent_yen = Number(u.spent_yen) + Number(payload.total);
       u[u.rank_type] = Number(u[u.rank_type]) + Number(payload.total);
       u.wallet[u.rank_type] = Number(u.wallet[u.rank_type]) - Number(payload.total);
       console.log(u.wallet)
