@@ -197,9 +197,10 @@ module.exports = {
 
     requestLottery: async (req, res) => {
         try {
+            const payload = req?.body || {}
             const user = await User.findById(req.user.id);
             let product = await lottery.findById(payload?.lottery);
-            const payload = req?.body || {}
+
             if (Number(user.wallet[product.rank_type]) < Number(payload.total)) {
                 return response.conflict(res, { message: 'You do not have sufficient tickets' });
             }
