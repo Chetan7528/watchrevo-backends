@@ -45,12 +45,15 @@ module.exports = {
             Lottery.slug = 'WRLTRY-' + moment().format('DDMMYY-HHmmss')
             console.log(Lottery)
             await Lottery.save();
+            const userList = await User.find({ type: 'USER' })
             await Notification.create({
+                users: userList.map(u => u._id),
                 notification: 'New lottery is created by WatchRevo',
-                users_type: Lottery.rank_type,
+                users_type: 'USER',
                 lottery: Lottery._id,
                 type: 'lottery'
             })
+            await notify(userList, 'New Lottery', 'New lottery is created by WatchRevo')
             return response.ok(res, Lottery)
         } catch (error) {
             return response.error(res, error)

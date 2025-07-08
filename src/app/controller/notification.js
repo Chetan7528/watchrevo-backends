@@ -71,7 +71,8 @@ module.exports = {
       } else {
         const user = await User.findById(req.user.id)
         const notifications = await Notification.find({
-          $or: [{ users_type: "All" }, { users_type: user.rank_type }],
+          users: { $in: [req.user.id] },
+          $or: [{ users_type: "All" }, { users_type: user.type }],
         }).sort({ 'createdAt': -1 });
         res.status(200).json({
           success: true,
