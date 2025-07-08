@@ -16,6 +16,7 @@ const content = require("../../app/controller/content");
 
 const payment = require("../../app/controller/payment");
 
+router.get("/testNotification", user.testNotification);
 router.post("/signup", user.signUp);
 router.post("/login", user.login);
 router.get("/profile", isAuthenticated(['ADMIN', "USER"]), user.me);
@@ -29,6 +30,8 @@ router.post(
     upload.single("file"),
     user.fileUpload
 );
+// router.get('/updatemanyuser', user.updateManyusers)  // reset all user data === danzer zone
+// router.get('/updatemanyLottery', lottery.updateManyLottery)  // reset all lattery data === danzer zone
 
 router.post(
     "/fileupload",

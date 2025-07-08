@@ -5,6 +5,7 @@ const passport = require("passport");
 const jwtService = require("./../services/jwtService");
 const mailNotification = require("./../services/mailNotification");
 const mongoose = require("mongoose");
+const { notify } = require("../services/notification");
 // const { notify } = require("../services/notification");
 
 const User = mongoose.model("User");
@@ -67,6 +68,13 @@ module.exports = {
         type: user.type,
         tokenVersion: new Date(),
       });
+      if (req.body.player_id) {
+        await Device.updateOne(
+          { device_token: req.body.device_token },
+          { $set: { player_id: req.body.player_id, user: user._id } },
+          { upsert: true }
+        );
+      }
       await user.save();
       let data = {
         token,
@@ -301,6 +309,48 @@ module.exports = {
       );
       delete data.password;
       return response.ok(res, data);
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+
+  updateManyusers: async (req, res) => {
+    try {
+      const payload = {
+        rank_type: 'Bronze',
+        spent_yen: 0,
+        totalspent_yen: 0,
+        Bronze: 0,
+        Silver: 0,
+        Gold: 0,
+        Platinam: 0,
+        Diamond: 0,
+        wallet: {
+          Bronze: 0,
+          Silver: 0,
+          Gold: 0,
+          Platinam: 0,
+          Diamond: 0
+        },
+        rankedDate: new Date()
+      }
+      const user = await User.updateMany({}, payload);
+      return response.ok(res, {
+        message: "File uploaded.",
+      });
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+
+  testNotification: async (req, res) => {
+    try {
+      await notify(
+        ['67b57b9a02f27d1d0ee1531b'],
+        "MylodgeApp",
+        'Welcome to the MyLodge App'
+      )
+      return response.ok(res, { message: 'Notification sent' });
     } catch (error) {
       return response.error(res, error);
     }

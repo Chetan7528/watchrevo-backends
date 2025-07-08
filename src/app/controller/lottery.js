@@ -4,6 +4,7 @@ const response = require("./../responses");
 const requestLottery = require("../model/lottery-request");
 const user = require("../model/user");
 const moment = require("moment");
+const { notify } = require("../services/notification");
 const User = mongoose.model("User");
 const Notification = mongoose.model("Notification");
 
@@ -189,6 +190,74 @@ module.exports = {
                 new: true,
                 upsert: true,
             });
+            if (payload.choosewinner) {
+                await Promise.all(
+                    product.prize.map(async item => {
+                        let result = await requestLottery.aggregate([
+                            {
+                                $match: {
+                                    ticketnumber: { $in: item.winnersUser }
+                                }
+                            },
+                            {
+                                $project: {
+                                    user: 1,
+                                    matchingTickets: {
+                                        $size: {
+                                            $filter: {
+                                                input: '$ticketnumber',
+                                                as: 'ticket',
+                                                cond: { $in: ['$$ticket', myTicketList] }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                $match: {
+                                    matchingTickets: { $gt: 0 } // optional, filters users who have at least 1 matching ticket
+                                }
+                            }
+                        ]);
+                        result.map(async users => {
+                            if (item.type === 'product') {
+                                let des = `🎉 Congratulations for winning this round of the lottery no. ${product.slug}! you win ${item.prizeNumber} prize as a ${item.product_name} product. Please update your address if you have not updated. Thank you — better luck next time! 🍀`;
+                                await Notification.create({
+                                    notification: des,
+                                    users_type: 'USER',
+                                    lottery: product._id,
+                                    type: 'lottery',
+                                    users: [users.user]
+                                });
+                                await notify([users.user], `🏆 We have a Winner!`, des);
+                            }
+
+                            if (item.type === 'point') {
+                                let des = `🎉 Congratulations for winning this round of the lottery no. ${product.slug}! you win ${item.prizeNumber} prize as a ${product.rank_type} tickets. Your ${users.matchingTickets} ticket number has include in this. Thank you — better luck next time! 🍀`;
+                                await Notification.create({
+                                    notification: des,
+                                    users_type: 'USER',
+                                    lottery: product._id,
+                                    type: 'lottery',
+                                    users: [users.user]
+                                });
+                                await notify([users.user], `🏆 We have a Winner!`, des);
+                                const updateField = `wallet.${product.rank_type}`;
+
+                                await User.findByIdAndUpdate(users.user, {
+                                    $inc: {
+                                        [updateField]: Number(item.point) * Number(users.matchingTickets)
+                                    }
+                                })
+                            }
+                        })
+
+                    })
+
+
+
+                )
+            }
             return response.ok(res, product);
         } catch (error) {
             return response.error(res, error);
@@ -237,6 +306,29 @@ module.exports = {
             user[user.rank_type] = Number(user[user.rank_type]) + Number(payload.total);
             user.wallet[product.rank_type] = Number(user.wallet[product.rank_type]) - Number(payload.total);
             console.log(user)
+            if (product.soldTicket === product.capacity) {
+                let userList = []
+                const allLottery = await requestLottery.find({ lottery: product._id });
+                userList = allLottery.map(f => f.user);
+                await Notification.create({
+                    notification: `${product.slug} lottery tickets have been claimed. Stay tuned for more chances to win!`,
+                    users_type: 'USER',
+                    lottery: product._id,
+                    type: 'lottery',
+                    users: userList
+                });
+                await notify(userList, `${product.slug} lottery ticket Sold Out!`, `${product.slug} lottery tickets have been claimed. Stay tuned for more chances to win!`);
+                await Notification.create({
+                    notification: `${product.slug} lottery ticket quota met. Check dashboard for participant stats.`,
+                    users_type: 'ADMIN',
+                    lottery: product._id,
+                    type: 'lottery',
+                    users: [admin._id]
+                });
+                const admin = await User.findOne({ type: 'ADMIN' })
+                await notify([admin._id], `${product.slug} lottery ticket Sold Out!`, `${product.slug} lottery ticket quota met. Check dashboard for participant stats.`)
+            }
+
             await User.findByIdAndUpdate(req.user.id, user);
             const data = {
                 lotteryRequest: cat,
@@ -304,6 +396,9 @@ module.exports = {
                     $match: { user: new mongoose.Types.ObjectId(req.user.id) }
                 },
                 {
+                    $sort: { 'createdAt': -1 }
+                },
+                {
                     $lookup: {
                         from: "lotteries", // collection to compare
                         let: { userTickets: "$ticketnumber" },
@@ -368,6 +463,9 @@ module.exports = {
     getLotteryAllWinners: async (req, res) => {
         try {
             const result = await lottery.aggregate([
+                {
+                    $sort: { 'createdAt': -1 }
+                },
                 {
                     $unwind: "$prize"
                 },
@@ -447,6 +545,21 @@ module.exports = {
             return response.ok(res, result)
         } catch (error) {
             return response.error(res, error)
+        }
+    },
+
+    updateManyLottery: async (req, res) => {
+        try {
+            const payload = {
+                soldTicket: 0,
+                latestTicketNumber: 0,
+            }
+            const user = await lottery.updateMany({}, payload);
+            return response.ok(res, {
+                message: "File uploaded.",
+            });
+        } catch (error) {
+            return response.error(res, error);
         }
     },
 }
