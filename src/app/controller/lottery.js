@@ -513,6 +513,7 @@ module.exports = {
                 {
                     $project: {
                         prizeNumber: "$prize.prizeNumber",
+                        product_image: "$prize.product_image",
                         prizeType: "$prize.type",
                         winnerUser: "$prize.winnersUser",
                         product: "$prize.product",
