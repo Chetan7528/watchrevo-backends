@@ -246,10 +246,12 @@ module.exports = {
                                 });
                                 await notify([users.user], `🏆 We have a Winner!`, des);
                                 const updateField = `wallet.${product.rank_type}`;
-
+                                console.log(Number(item.point), users.matchingTickets)
+                                const totalPoints = Number((Number(item.point) * Number(users.matchingTickets)).toFixed(1))
+                                console.log(totalPoints)
                                 await User.findByIdAndUpdate(users.user, {
                                     $inc: {
-                                        [updateField]: Number(item.point) * Number(users.matchingTickets)
+                                        [updateField]: totalPoints
                                     }
                                 })
                             }
