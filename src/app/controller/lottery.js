@@ -440,6 +440,9 @@ module.exports = {
                                     price: 1,
                                     slug: 1,
                                     prize: "$prize",
+                                    matchedTickets: {
+                                        $setIntersection: ["$prize.winnersUser", "$$userTickets"]
+                                    }
                                 }
                             }
                         ],
@@ -452,7 +455,8 @@ module.exports = {
                         lottery_request_id: '$_id',
                         total: 1,
                         quantity: 1,
-                        matchedPrizes: 1
+                        matchedPrizes: 1,
+                        ticket: "$ticketnumber"
                     }
                 },
                 {
