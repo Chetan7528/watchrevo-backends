@@ -210,7 +210,7 @@ module.exports = {
                                             $filter: {
                                                 input: '$ticketnumber',
                                                 as: 'ticket',
-                                                cond: { $in: ['$$ticket', myTicketList] }
+                                                cond: { $in: ['$$ticket', item.winnersUser] }
                                             }
                                         }
                                     }
