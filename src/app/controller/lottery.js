@@ -558,6 +558,101 @@ module.exports = {
         }
     },
 
+    getLotteryproductWinners: async (req, res) => {
+        try {
+            const result = await lottery.aggregate([
+                {
+                    $match: {
+                        "_id": new mongoose.Types.ObjectId(req.params.id)
+                    }
+                },
+                {
+                    $sort: { 'createdAt': -1 }
+                },
+                {
+                    $unwind: "$prize"
+                },
+
+                {
+                    $match: {
+                        "prize.type": "product"
+                    }
+                },
+                {
+                    $unwind: "$prize.winnersUser"
+                },
+                {
+                    $lookup: {
+                        from: "lotteryrequests", // your second collection name
+                        let: { winnerUserId: "$prize.winnersUser", lotteryId: "$_id" },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $and: [
+                                            { $eq: ["$lottery", "$$lotteryId"] },
+                                            { $in: ["$$winnerUserId", "$ticketnumber"] }
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        as: "matchingTickets"
+                    }
+                },
+                {
+                    $match: {
+                        "matchingTickets.0": { $exists: true }
+                    }
+                },
+                {
+                    $project: {
+                        prizeNumber: "$prize.prizeNumber",
+                        product_image: "$prize.product_image",
+                        prizeType: "$prize.type",
+                        winnerUser: "$prize.winnersUser",
+                        product: "$prize.product",
+                        point: "$prize.point",
+                        ticketDetails: { $arrayElemAt: ["$matchingTickets", 0] },
+                        slug: "$slug"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'ticketDetails.user',
+                        foreignField: '_id',
+                        as: 'ticketDetails.user',
+                    }
+                },
+                // {
+                //     $lookup: {
+                //         from: 'products',
+                //         localField: 'product',
+                //         foreignField: '_id',
+                //         as: 'product',
+                //     }
+                // },
+                // {
+                //     $unwind: '$product'
+                // },
+                {
+                    $unwind: '$ticketDetails.user'
+                },
+                {
+                    $group: {
+                        _id: '$ticketDetails.lottery',
+                        data: { "$push": "$$ROOT" },
+                        slug: { $first: '$slug' }
+                    }
+                }
+            ]);
+            return response.ok(res, result)
+        } catch (error) {
+            return response.error(res, error)
+        }
+    },
+
     updateManyLottery: async (req, res) => {
         try {
             const payload = {

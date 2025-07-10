@@ -108,6 +108,8 @@ router.get("/getRequestLotteryById/:id", lottery.getRequestLotteryById);
 router.get("/getTicketNumber/:id", lottery.getTicketNumber);
 router.get("/getLotteryWinnerListByUser", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getLotteryWinnerListByUser);
 router.get("/getLotteryAllWinners", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getLotteryAllWinners);
+// router.get("/getLotteryproductWinners/:id", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getLotteryproductWinners);
+router.get('/getLotteryproductWinners/:id', isAuthenticated(["ADMIN"]), lottery.getLotteryproductWinners)
 
 //Notification
 
