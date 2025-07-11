@@ -66,7 +66,7 @@ module.exports = {
             if (req.query.userid) {
                 const user = await User.findById(req.query.userid)
                 if (user?.rank_type !== 'Bronzu') {
-                    let yearDate = new Date(user?.rankedDate).setFullYear(new Date(user?.rankedDate).getFullYear() + 1)
+                    let yearDate = new Date(user?.rankedDate || user?.createdAt).setFullYear(new Date(user?.rankedDate || user?.createdAt).getFullYear() + 1)
                     if (new Date(yearDate) < new Date()) {
                         if (maxRankData[user.rank_type] > user.spent_yen) {
                             user.spent_yen = 0
