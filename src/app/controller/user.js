@@ -43,6 +43,7 @@ module.exports = {
           country: payload?.country,
           type: payload?.type,
           phone: payload?.phone,
+          rankedDate: new Date()
         });
         user.password = user.encryptPassword(req.body.password);
         await user.save();
