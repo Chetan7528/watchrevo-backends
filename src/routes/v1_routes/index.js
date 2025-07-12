@@ -30,6 +30,12 @@ router.post(
     upload.single("file"),
     user.fileUpload
 );
+
+router.get(
+    "/getAllUserForAdmin",
+    isAuthenticated(["ADMIN"]),
+    user.getAllUserForAdmin
+);
 // router.get('/updatemanyuser', user.updateManyusers)  // reset all user data === danzer zone
 // router.get('/updatemanyLottery', lottery.updateManyLottery)  // reset all lattery data === danzer zone
 

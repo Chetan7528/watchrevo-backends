@@ -357,4 +357,42 @@ module.exports = {
     }
   },
 
+
+  getAllUserForAdmin: async (req, res) => {
+    try {
+      // console.log(req.query)
+      const cond = {
+        type: 'USER'
+      }
+      if (req.query.key) {
+        cond['$or'] = [
+          { username: { $regex: req.query.key, $options: "i" } },
+          { email: { $regex: req.query.key, $options: "i" } },
+          { phone: { $regex: req.query.key, $options: "i" } },
+          { rank_type: { $regex: req.query.key, $options: "i" } },
+        ]
+      }
+      const { page = 1, limit = 20 } = req.query;
+      let users = await User.find(cond, '-password')
+        .sort({ createdAt: -1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit);
+
+      const totalItems = await User.countDocuments(cond);
+      const totalPages = Math.ceil(totalItems / limit);
+      const data = {
+        users,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: page,
+          itemsPerPage: limit,
+        },
+      }
+      return response.ok(res, data);
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+
 };
