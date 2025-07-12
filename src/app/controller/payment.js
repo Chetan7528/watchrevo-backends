@@ -19,11 +19,40 @@ const gmopg = new GMOPG({
     ShopID: process.env.SHOP_ID,
     ShopPass: process.env.SHOP_PASSWORD,
 });
+
+const initiatePayment = async (req, res) => {
+    const { orderID, amount } = req.body;
+    gmopg.entryTran({
+        OrderID: orderID,
+        JobCd: ENUMS.JobCd.Auth,
+        Amount: amount
+    }).then((entryRes) => {
+        gmopg.execTran({
+            AccessID: entryRes.AccessID,
+            AccessPass: entryRes.AccessPass,
+            OrderID: orderID,
+            Method: ENUMS.Method.Lump,
+            CardNo: '4111111111111111',
+            Expire: '2612',
+            SecurityCode: '123'
+        }).then((execRes) => {
+            console.log(execRes)
+            // gmopg.alterTran({
+            //     AccessID: entryRes.AccessID,
+            //     AccessPass: entryRes.AccessPass,
+            //     JobCd: ENUMS.JobCd.Sales,
+            //     Amount: amount
+            // }).then((alterRes) => {
+            //     console.log(alterRes)
+            // })
+        })
+    })
+}
 function parseResponse(responseString) {
     return Object.fromEntries(new URLSearchParams(responseString));
 }
 
-const initiatePayment = async (req, res) => {
+const initiatePayment2 = async (req, res) => {
     try {
         console.log({
             SiteID: process.env.SITE_ID,
@@ -49,24 +78,24 @@ const initiatePayment = async (req, res) => {
         );
         const entryRes = parseResponse(responses.data)
         console.log(entryRes)
-        // const data = {
-        //     AccessID: entryRes.AccessID,
-        //     AccessPass: entryRes.AccessPass,
-        //     OrderID: orderID,
-        //     Method: ENUMS.Method.Lump,
-        //     CardNo: '4100000000100011',
-        //     Expire: '2026',
-        //     SecurityCode: '123',
-        //     JobCd: "CAPTURE"
-        // }
+        const data = {
+            AccessID: entryRes.AccessID,
+            AccessPass: entryRes.AccessPass,
+            OrderID: orderID,
+            Method: ENUMS.Method.Lump,
+            CardNo: '4111111111111111',
+            Expire: '2612',
+            SecurityCode: '123',
+            JobCd: "CAPTURE"
+        }
 
-        // console.log(data)
-        // gmopg.execTran(data).then((execRes) => {
+        console.log(data)
+        gmopg.execTran(data).then((execRes) => {
 
-        //     return response.ok(res, execRes);
-        // })
+            return response.ok(res, execRes);
+        })
 
-        return response.ok(res, entryRes);
+        // return response.ok(res, entryRes);
     } catch (error) {
         return response.error(res, error);
     }
