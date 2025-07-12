@@ -279,7 +279,7 @@ module.exports = {
             console.log(payload.total)
             console.log(Number(user.wallet[product.rank_type]), Number(payload.total))
             if (Number(user.wallet[product.rank_type]) < Number(payload.total)) {
-                return response.conflict(res, { message: 'You do not have sufficient tickets' });
+                return response.conflict(res, { message: 'There are not enough tickets.' });
             }
             const currentTickets = Number(product.capacity) - Number(product.soldTicket);
             if (Number(currentTickets) < Number(payload.quantity)) {
