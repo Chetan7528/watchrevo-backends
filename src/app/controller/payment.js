@@ -1,5 +1,4 @@
 // paymentService.js
-const { default: GMOPG, ENUMS } = require('gmopg');
 const Stripe = require("stripe");
 const { default: mongoose } = require('mongoose');
 
@@ -12,90 +11,58 @@ const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_API_SECRET_KEY);
 const response = require("./../responses");
 const { default: axios } = require('axios');
 
-const gmopg = new GMOPG({
-    baseUrl: 'https://pt01.mul-pay.jp',
-    SiteID: process.env.SITE_ID,
-    SitePass: process.env.SITE_PASSWORD,
-    ShopID: process.env.SHOP_ID,
-    ShopPass: process.env.SHOP_PASSWORD,
-});
 
-const initiatePayment = async (req, res) => {
-    const { orderID, amount } = req.body;
-    gmopg.entryTran({
-        OrderID: orderID,
-        JobCd: ENUMS.JobCd.Auth,
-        Amount: amount
-    }).then((entryRes) => {
-        gmopg.execTran({
-            AccessID: entryRes.AccessID,
-            AccessPass: entryRes.AccessPass,
-            OrderID: orderID,
-            Method: ENUMS.Method.Lump,
-            CardNo: '4111111111111111',
-            Expire: '2612',
-            SecurityCode: '123'
-        }).then((execRes) => {
-            console.log(execRes)
-            // gmopg.alterTran({
-            //     AccessID: entryRes.AccessID,
-            //     AccessPass: entryRes.AccessPass,
-            //     JobCd: ENUMS.JobCd.Sales,
-            //     Amount: amount
-            // }).then((alterRes) => {
-            //     console.log(alterRes)
-            // })
-        })
-    })
-}
+
 function parseResponse(responseString) {
     return Object.fromEntries(new URLSearchParams(responseString));
 }
 
-const initiatePayment2 = async (req, res) => {
+const initiatePayment = async (req, res) => {
     try {
-        console.log({
-            SiteID: process.env.SITE_ID,
-            SitePass: process.env.SITE_PASSWORD,
-            ShopID: process.env.SHOP_ID,
-            ShopPass: process.env.SHOP_PASSWORD,
-        })
-        const { orderID, amount } = req.body;
+
+        const { orderID, amount, token } = req.body;
         console.log(req.body)
 
         const params = new URLSearchParams({
             ShopID: process.env.SHOP_ID,
             ShopPass: process.env.SHOP_PASSWORD,
             OrderID: orderID,
-            JobCd: 'AUTH',
+            JobCd: 'CAPTURE',
             Amount: amount.toString(),
         });
 
         const responses = await axios.post(
-            'https://pt01.mul-pay.jp/payment/EntryTran.idPass',
+            process.env.GMOENTRYURL,
             params,
             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         );
+        console.log(responses)
         const entryRes = parseResponse(responses.data)
         console.log(entryRes)
-        const data = {
-            AccessID: entryRes.AccessID,
-            AccessPass: entryRes.AccessPass,
-            OrderID: orderID,
-            Method: ENUMS.Method.Lump,
-            CardNo: '4111111111111111',
-            Expire: '2612',
-            SecurityCode: '123',
-            JobCd: "CAPTURE"
+        if (entryRes.AccessID) {
+            const param = new URLSearchParams({
+                AccessID: entryRes.AccessID,
+                AccessPass: entryRes.AccessPass,
+                OrderID: orderID,
+                Method: '1', // Lump-sum
+                Token: token,
+            });
+            console.log(param)
+            const ExecTranresponses = await axios.post(
+                process.env.GMOEXCURL,
+                param,
+                { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+            );
+            const execRes = parseResponse(ExecTranresponses.data)
+            console.log(execRes)
+            if (execRes.OrderID) {
+                return response.ok(res, execRes);
+            } else {
+                return response.error(res, { message: 'Payment failed. Please try again' });
+            }
+        } else {
+            return response.error(res, { message: 'Payment failed. Please try again' });
         }
-
-        console.log(data)
-        gmopg.execTran(data).then((execRes) => {
-
-            return response.ok(res, execRes);
-        })
-
-        // return response.ok(res, entryRes);
     } catch (error) {
         return response.error(res, error);
     }

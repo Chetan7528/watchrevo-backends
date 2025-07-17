@@ -199,30 +199,31 @@ module.exports = {
     try {
       const u = await user.findById(req.user.id)
       const payload = req?.body || {}
-      if (Number(u.wallet[u.rank_type]) < Number(payload.total)) {
-        return response.conflict(res, { message: 'You do not have sufficient tickets' });
-      }
+      // if (Number(u.wallet[u.rank_type]) < Number(payload.total)) {
+      //   return response.conflict(res, { message: 'You do not have sufficient tickets' });
+      // }
       payload.user = req.user.id
-      payload.order_id = 'ORD-' + moment().format('DDMMYY-HHmmss')
+      // payload.order_id = 'ORD-' + moment().format('DDMMYY-HHmmss')
       let cat = new productRequest(payload);
       await cat.save();
 
       if (payload.shiping_address) {
         u.shiping_address = payload.shiping_address;
+        await u.save()
       }
       // u.totalspent_yen = Number(u.totalspent_yen) + Number(payload.total);
       // u.spent_yen = Number(u.spent_yen) + Number(payload.total);
-      u[u.rank_type] = Number(u[u.rank_type]) + Number(payload.total);
-      u.wallet[u.rank_type] = Number(u.wallet[u.rank_type]) - Number(payload.total);
-      console.log(u.wallet)
-      if (u.rank_type !== 'Diamond') {
-        if (rankData[u.rank_type] < u.spent_yen) {
-          u.spent_yen = 0
-          u.rankedDate = new Date()
-          u.rank_type = nextRank[u.rank_type]
-        }
-      }
-      await u.save()
+      // u[u.rank_type] = Number(u[u.rank_type]) + Number(payload.total);
+      // u.wallet[u.rank_type] = Number(u.wallet[u.rank_type]) - Number(payload.total);
+      // console.log(u.wallet)
+      // if (u.rank_type !== 'Diamond') {
+      //   if (rankData[u.rank_type] < u.spent_yen) {
+      //     u.spent_yen = 0
+      //     u.rankedDate = new Date()
+      //     u.rank_type = nextRank[u.rank_type]
+      //   }
+      // }
+      // await u.save();
       return response.ok(res, { message: 'Order placed successfully' });
     } catch (error) {
       return response.error(res, error);
