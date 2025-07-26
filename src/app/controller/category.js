@@ -23,7 +23,11 @@ module.exports = {
 
     getCategory: async (req, res) => {
         try {
-            let category = await Category.find();
+            const cond = {}
+            if (req.query.status) {
+                cond.status = 'Active'
+            }
+            let category = await Category.find(cond);
             return response.ok(res, category);
         } catch (error) {
             return response.error(res, error);
@@ -81,6 +85,15 @@ module.exports = {
             return response.error(res, error);
         }
     },
+    deleteAllNullCategory: async (req, res) => {
+        try {
+
+            await Category.deleteMany({ _id: null });
+            return response.ok(res, { meaasge: "Deleted successfully" });
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
     getPopularCategory: async (req, res) => {
 
         try {
@@ -123,7 +136,7 @@ module.exports = {
                         "name": 1,
                         "image": 1,
                         "products": 1,
-                        "slug":1
+                        "slug": 1
                     }
                 },
                 // {

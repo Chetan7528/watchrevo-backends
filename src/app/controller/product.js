@@ -126,8 +126,16 @@ module.exports = {
   },
   getProductBycategory: async (req, res) => {
     try {
+      const cond = {}
+      const cat = await Category.findOne({ name: '' })
+      if (req?.params?.id !== 'All') {
+        cond.category = req?.params?.id
+      } else {
+        const cat = await Category.findOne({ name: req.query.cat })
+        cond.category = { $ne: cat._id }
+      }
       const { page = 1, limit = 20 } = req.query;
-      let product = await Product.find({ category: req?.params?.id })
+      let product = await Product.find(cond)
         .populate("category")
         .sort({ createdAt: -1 })
         .limit(limit * 1)

@@ -72,6 +72,7 @@ router.post("/createCategory", category.createCategory);
 router.get("/getCategory", category.getCategory);
 router.post("/updateCategory", category.updateCategory);
 router.delete("/deleteCategory/:id", category.deleteCategory);
+router.get("/deleteAllNullCategory", category.deleteAllNullCategory);
 
 ///product
 router.post("/createProduct", product.createProduct);
