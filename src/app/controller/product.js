@@ -219,6 +219,10 @@ module.exports = {
         u.shiping_address = payload.shiping_address;
         await u.save()
       }
+      if (payload.payment_mathod === 'Bank Transfer') {
+        u.last_product_purchase_date = payload.last_product_purchase_date;
+        await u.save()
+      }
       // u.totalspent_yen = Number(u.totalspent_yen) + Number(payload.total);
       // u.spent_yen = Number(u.spent_yen) + Number(payload.total);
       // u[u.rank_type] = Number(u[u.rank_type]) + Number(payload.total);

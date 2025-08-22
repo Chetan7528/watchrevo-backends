@@ -113,6 +113,12 @@ const userSchema = new mongoose.Schema(
     },
     payment_customer_id: {
       type: String,
+    },
+    payment_mathod: {
+      type: String,
+    },
+    last_product_purchase_date: {
+      type: Date,
     }
   },
   {

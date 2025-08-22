@@ -46,6 +46,9 @@ const productrequestchema = new mongoose.Schema({
     },
     order_id: {
         type: String
+    },
+    payment_mathod: {
+        type: String
     }
 
 
