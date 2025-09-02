@@ -15,6 +15,7 @@ const notification = require("../../app/controller/notification");
 const content = require("../../app/controller/content");
 
 const payment = require("../../app/controller/payment");
+const refferelcode = require("../../app/controller/refferelcode");
 
 router.get("/testNotification", user.testNotification);
 router.post("/signup", user.signUp);
@@ -66,6 +67,13 @@ router.post("/createInquery", isAuthenticated(['ADMIN', "USER"]), inquery.create
 router.get("/getInquery", inquery.getInquery);
 router.get("/getInquerybyuser", isAuthenticated(['ADMIN', "USER"]), inquery.getInquerybyuser);
 
+
+// //Refferelcode
+router.post("/createRefferelCode", refferelcode.createRefferelCode);
+router.get("/getRefferelCode", refferelcode.getRefferelCode);
+router.post("/updateRefferelCode", refferelcode.updateRefferelCode);
+router.delete("/deleteRefferelCode/:id", refferelcode.deleteRefferelCode);
+router.get("/deleteAllNullRefferelCode", refferelcode.deleteAllNullRefferelCode);
 
 //category
 router.post("/createCategory", category.createCategory);

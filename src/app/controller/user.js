@@ -6,6 +6,7 @@ const jwtService = require("./../services/jwtService");
 const mailNotification = require("./../services/mailNotification");
 const mongoose = require("mongoose");
 const { notify } = require("../services/notification");
+const RefferelCode = mongoose.model("RefferelCode");
 // const { notify } = require("../services/notification");
 
 const User = mongoose.model("User");
@@ -289,6 +290,24 @@ module.exports = {
   updateWallet: async (req, res) => {
     const payload = req.body;
     const userId = req?.body?.userId || req.user.id
+
+    if (payload.refferel_code) {
+      const refferal = await RefferelCode.findOne({ name: payload.refferel_code })
+      if (refferal) {
+        if (refferal.used_user && refferal.used_user.length > 0) {
+          if (refferal.used_user.includes(userId)) {
+            return response.conflict(res, { message: 'You have already used this refferal code' });
+          } else {
+            refferal.used_user.push(userId);
+          }
+        } else {
+          refferal.used_user = [userId]
+        }
+        await refferal.save()
+      } else {
+        return response.conflict(res, { message: 'Invalid refferal code' });
+      }
+    }
     try {
       const data = await User.findByIdAndUpdate(
         userId,
