@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "watchrevo.com",
+            "sha256_cert_fingerprints": [
+                "25:77:D0:16:67:49:AA:23:0C:DA:0F:56:96:E8:05:1A:8D:C5:8A:77:74:E4:7C:AC:AC:C1:44:67:40:3A:5C:96"
+            ]
+        }
+    }
+]
