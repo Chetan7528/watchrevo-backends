@@ -7,7 +7,9 @@ module.exports = (app) => {
     app.get('/', (req, res) => res.status(200).json({ status: "OK" }));
     app.get("/.well-known/assetlinks.json", (req, res) => {
         res.sendFile(path.join(__dirname, ".well-known/assetlinks.json"));
-
+    });
+    app.get("/.well-known/apple-app-site-association", (req, res) => {
+        res.sendFile(path.join(__dirname, ".well-known/aapple-app-site-association"));
     });
     app.get("/reffer/:reffercode/:uniquecode", (req, res) => {
         // res.sendFile(path.join(__dirname, "public", "index.html"));
