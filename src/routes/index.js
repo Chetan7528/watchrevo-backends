@@ -10,7 +10,18 @@ module.exports = (app) => {
     });
     app.get("/.well-known/apple-app-site-association", (req, res) => {
         res.setHeader('Content-Type', 'application/json');
-        res.sendFile(path.join(__dirname, ".well-known/apple-app-site-association"));
+        // res.sendFile(path.join(__dirname, ".well-known/apple-app-site-association"));
+        res.json({
+            applinks: {
+                apps: [],
+                details: [
+                    {
+                        "appID": "LGR4C68J28.watchrevo.com",
+                        paths: ["*"]
+                    }
+                ]
+            }
+        });
     });
     app.get("/reffer/:reffercode/:uniquecode", (req, res) => {
         // res.sendFile(path.join(__dirname, "public", "index.html"));
