@@ -16,6 +16,7 @@ const content = require("../../app/controller/content");
 
 const payment = require("../../app/controller/payment");
 const refferelcode = require("../../app/controller/refferelcode");
+const refferalhistory = require("../../app/controller/refferalhistory");
 
 router.get("/testNotification", user.testNotification);
 router.post("/signup", user.signUp);
@@ -141,4 +142,7 @@ router.get("/content", content.getContent);
 router.post('/initiatePayment', payment.initiatePayment)
 router.post('/executePayment', payment.executePayment)
 router.post('/initiatestripe', payment.poststripe)
+
+//refferal
+router.post('/refferalcreate', isAuthenticated(["ADMIN", "USER"]), refferalhistory.createRefferalHistory)
 module.exports = router;

@@ -9,6 +9,10 @@ module.exports = (app) => {
         res.sendFile(path.join(__dirname, ".well-known/assetlinks.json"));
 
     });
+    app.get("/reffer/:reffercode/:uniquecode", (req, res) => {
+        // res.sendFile(path.join(__dirname, "public", "index.html"));
+        res.sendFile(path.join(__dirname, "index.html")); // place index.html at project root
+    });
     app.get("/reffer", (req, res) => {
         // res.sendFile(path.join(__dirname, "public", "index.html"));
         res.sendFile(path.join(__dirname, "index.html")); // place index.html at project root
