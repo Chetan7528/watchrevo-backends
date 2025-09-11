@@ -72,6 +72,7 @@ router.get("/getInquerybyuser", isAuthenticated(['ADMIN', "USER"]), inquery.getI
 // //Refferelcode
 router.post("/createRefferelCode", refferelcode.createRefferelCode);
 router.get("/getRefferelCode", refferelcode.getRefferelCode);
+router.get("/getRefferelCode/:id", refferelcode.getRefferelCodeById);
 router.post("/updateRefferelCode", refferelcode.updateRefferelCode);
 router.delete("/deleteRefferelCode/:id", refferelcode.deleteRefferelCode);
 router.get("/deleteAllNullRefferelCode", refferelcode.deleteAllNullRefferelCode);
@@ -145,4 +146,5 @@ router.post('/initiatestripe', payment.poststripe)
 
 //refferal
 router.post('/refferalcreate', isAuthenticated(["ADMIN", "USER"]), refferalhistory.createRefferalHistory)
+router.get('/getRefferalHistorByRefferCodeID/:refferID', isAuthenticated(["ADMIN"]), refferalhistory.getRefferalHistorByRefferCodeID)
 module.exports = router;
