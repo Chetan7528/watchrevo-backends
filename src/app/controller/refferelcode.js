@@ -23,7 +23,7 @@ module.exports = {
     getRefferelCode: async (req, res) => {
         try {
             const cond = {}
-            if (req.query.status) {
+            if (req.user.type === 'USER') {
                 cond.status = 'Active'
             }
             let category = await RefferelCode.find(cond);
