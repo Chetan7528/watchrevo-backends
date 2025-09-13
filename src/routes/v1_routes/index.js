@@ -73,7 +73,7 @@ router.get("/getInquerybyuser", isAuthenticated(['ADMIN', "USER"]), inquery.getI
 router.post("/createRefferelCode", refferelcode.createRefferelCode);
 router.get("/getRefferelCode", refferelcode.getRefferelCode);
 router.get("/getRefferelCode/:id", refferelcode.getRefferelCodeById);
-router.post("/updateRefferelCode", refferelcode.updateRefferelCode);
+router.post("/updateRefferelCode", isAuthenticated(['ADMIN', "USER"]), refferelcode.updateRefferelCode);
 router.delete("/deleteRefferelCode/:id", refferelcode.deleteRefferelCode);
 router.get("/deleteAllNullRefferelCode", refferelcode.deleteAllNullRefferelCode);
 
