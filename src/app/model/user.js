@@ -119,6 +119,9 @@ const userSchema = new mongoose.Schema(
     },
     last_product_purchase_date: {
       type: Date,
+    },
+    refferal_uniquecode: {
+      type: String,
     }
   },
   {
