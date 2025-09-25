@@ -64,7 +64,7 @@ module.exports = {
               }
               if (uniqueCode) {
                 user.refferal_uniquecode = payload.uniquecode
-                uniqueCode.status = 'Completed';
+                // uniqueCode.status = 'Completed';
                 uniqueCode.invitee_user = user._id;
                 // let inviterUser = await User.findById(uniqueCode.inviter_user);
 
@@ -93,10 +93,12 @@ module.exports = {
             } else {
               return response.conflict(res, { message: 'Invalid refferal code' });
             }
+          } else {
+            return res.status(404).json({ success: false, message: 'Invalid refferal code.' });
           }
         }
         await user.save();
-        res.status(200).json({ success: true, data: user });
+        return res.status(200).json({ success: true, data: user });
       }
     } catch (error) {
       return response.error(res, error);
@@ -343,38 +345,43 @@ module.exports = {
     try {
 
       let u = await User.findById(userId)
+      console.log(u)
       if (u.refferal_uniquecode) {
-        let uniqueCode = await RefferelHistory.findOne({ code: u.refferal_uniquecode, status: "Pending" })
-        let refferal = await RefferelCode.findById(uniqueCode.refferal);
-        if (payload[refferal.invitee_ticket_type] <= 10) {
-          // if (refferal) {
-          if (uniqueCode) {
+        let uniqueCode = await RefferelHistory.findOne({ code: u.refferal_uniquecode, status: 'Pending' })
+        if (uniqueCode) {
+          let refferal = await RefferelCode.findById(uniqueCode.refferal);
+          if (refferal && payload[refferal.invitee_ticket_type] >= 10) {
+            // if (refferal) {
+
             uniqueCode.status = 'Completed';
             let inviterUser = await User.findById(uniqueCode.inviter_user);
+            let wallet = inviterUser.wallet
+
+            console.log(wallet)
             await uniqueCode.save();
             if (refferal.inviter_user && refferal.inviter_user.length > 0) {
-              if (refferal.inviter_user.includes(uniqueCode.inviter_user)) {
-                // return response.conflict(res, { message: 'You have already used this refferal code' });
-              } else {
-                refferal.inviter_user.push(uniqueCode.inviter_user);
-                inviterUser.wallet[refferal.inviter_ticket_type] = inviterUser.wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets;
-              }
+              // if (refferal.inviter_user.includes(uniqueCode.inviter_user)) {
+              //   console.log(wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets)
+              //   // return response.conflict(res, { message: 'You have already used this refferal code' });
+              // } else {
+              refferal.inviter_user.push(uniqueCode.inviter_user);
+              wallet[refferal.inviter_ticket_type] = wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets;
+              // }
             } else {
               refferal.inviter_user = [uniqueCode.inviter_user]
-              inviterUser.wallet[refferal.inviter_ticket_type] = inviterUser.wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets;
+              wallet[refferal.inviter_ticket_type] = wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets;
             }
-            await inviterUser.save();
+            inviterUser.wallet = wallet
+
+            console.log(inviterUser)
+            // await inviterUser.save();
+            await User.findByIdAndUpdate(uniqueCode.inviter_user, inviterUser);
             await refferal.save()
           }
 
           // } else {
           //   return response.conflict(res, { message: 'Invalid refferal code' });
           // }
-        }
-      } else {
-        let u = await User.findById(userId)
-        if (u.refferal_uniquecode) {
-
         }
       }
 
