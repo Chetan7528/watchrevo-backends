@@ -68,15 +68,15 @@ module.exports = {
                 uniqueCode.invitee_user = user._id;
                 // let inviterUser = await User.findById(uniqueCode.inviter_user);
 
-                let wallet = {
-                  Bronze: 0,
-                  Silver: 0,
-                  Gold: 0,
-                  Platinam: 0,
-                  Diamond: 0
-                }
-                wallet[refferal.invitee_ticket_type] = refferal.invitee_tickets;
-                user.wallet = wallet
+                // let wallet = {
+                //   Bronze: 0,
+                //   Silver: 0,
+                //   Gold: 0,
+                //   Platinam: 0,
+                //   Diamond: 0
+                // }
+                // wallet[refferal.invitee_ticket_type] = refferal.invitee_tickets;
+                // user.wallet = wallet
                 await uniqueCode.save();
                 // if (refferal.inviter_user && refferal.inviter_user.length > 0) {
                 //   if (refferal.inviter_user.includes(uniqueCode.inviter_user)) {
@@ -350,6 +350,7 @@ module.exports = {
         let uniqueCode = await RefferelHistory.findOne({ code: u.refferal_uniquecode, status: 'Pending' })
         if (uniqueCode) {
           let refferal = await RefferelCode.findById(uniqueCode.refferal);
+
           if (refferal && payload[refferal.invitee_ticket_type] >= 10) {
             // if (refferal) {
 
@@ -377,6 +378,7 @@ module.exports = {
             // await inviterUser.save();
             await User.findByIdAndUpdate(uniqueCode.inviter_user, inviterUser);
             await refferal.save()
+            payload[refferal.invitee_ticket_type] = payload[refferal.invitee_ticket_type] + refferal.invitee_tickets
           }
 
           // } else {
