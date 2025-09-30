@@ -24,9 +24,10 @@ module.exports = {
         try {
             const cond = {}
             if (req.user.type === 'USER') {
-                cond.status = 'Active'
+                // cond.status = 'Active'
+                cond.inviter_user = req.user.id
             }
-            let category = await RefferelCode.find(cond);
+            let category = await RefferelCode.find(cond).populate('inviter_user', 'username');
             return response.ok(res, category);
         } catch (error) {
             return response.error(res, error);

@@ -8,9 +8,10 @@ module.exports = {
     createRefferalHistory: async (req, res) => {
         try {
             const payload = req?.body || {};
-            const { randomUUID } = new ShortUniqueId({ length: 10 });
+            // const { randomUUID } = new ShortUniqueId({ length: 10 });
             payload.inviter_user = req.user.id;
-            payload.code = randomUUID()
+            // payload.code = randomUUID()
+            payload.code = payload.refferal
             let history = new RefferelHistory(payload);
             await history.save();
             return response.ok(res, history);

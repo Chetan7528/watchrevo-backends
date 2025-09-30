@@ -9,10 +9,10 @@ const refferelcodeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     }],
-    inviter_user: [{
+    inviter_user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-    }],
+    },
     invitee_ticket_type: {
         type: String,
     },

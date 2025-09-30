@@ -343,47 +343,28 @@ module.exports = {
 
 
     try {
-
       let u = await User.findById(userId)
       console.log(u)
       if (u.refferal_uniquecode) {
-        let uniqueCode = await RefferelHistory.findOne({ code: u.refferal_uniquecode, status: 'Pending' })
-        if (uniqueCode) {
-          let refferal = await RefferelCode.findById(uniqueCode.refferal);
+        let refferal = await RefferelCode.findById(u.refferal_uniquecode);
+        let inviterUser = await User.findById(refferal.inviter_user);
+        let refferalBonus = u[refferal.invitee_ticket_type] + payload[refferal.invitee_ticket_type]
+        if (refferal && refferalBonus >= 10) {
+          let wallet = inviterUser.wallet
+          console.log(wallet)
+          wallet[refferal.inviter_ticket_type] = wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets;
+          inviterUser.wallet = wallet
+          await User.findByIdAndUpdate(inviterUser._id, inviterUser);
 
-          if (refferal && payload[refferal.invitee_ticket_type] >= 10) {
-            // if (refferal) {
-
-            uniqueCode.status = 'Completed';
-            let inviterUser = await User.findById(uniqueCode.inviter_user);
-            let wallet = inviterUser.wallet
-
-            console.log(wallet)
-            await uniqueCode.save();
-            if (refferal.inviter_user && refferal.inviter_user.length > 0) {
-              // if (refferal.inviter_user.includes(uniqueCode.inviter_user)) {
-              //   console.log(wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets)
-              //   // return response.conflict(res, { message: 'You have already used this refferal code' });
-              // } else {
-              refferal.inviter_user.push(uniqueCode.inviter_user);
-              wallet[refferal.inviter_ticket_type] = wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets;
-              // }
-            } else {
-              refferal.inviter_user = [uniqueCode.inviter_user]
-              wallet[refferal.inviter_ticket_type] = wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets;
-            }
-            inviterUser.wallet = wallet
-
-            console.log(inviterUser)
-            // await inviterUser.save();
-            await User.findByIdAndUpdate(uniqueCode.inviter_user, inviterUser);
-            await refferal.save()
-            payload[refferal.invitee_ticket_type] = payload[refferal.invitee_ticket_type] + refferal.invitee_tickets
+          if (refferal.invitee_user && refferal.invitee_user.length > 0) {
+            refferal.invitee_user.push(u._id)
+          } else {
+            refferal.invitee_user = [u._id]
           }
-
-          // } else {
-          //   return response.conflict(res, { message: 'Invalid refferal code' });
-          // }
+          u.refferal_uniquecode = '';
+          await u.save();
+          await refferal.save()
+          payload[refferal.invitee_ticket_type] = payload[refferal.invitee_ticket_type] + refferal.invitee_tickets
         }
       }
 
@@ -396,9 +377,14 @@ module.exports = {
             'wallet.Gold': payload.Gold,
             'wallet.Platinam': payload.Platinam,
             'wallet.Diamond': payload.Diamond,
+            'Bronze': payload.Bronze,
+            'Silver': payload.Silver,
+            'Gold': payload.Gold,
+            'Platinam': payload.Platinam,
+            'Diamond': payload.Diamond,
             'spent_yen': payload.amount,
             'totalspent_yen': payload.amount,
-          }
+          },
         },
         {
           new: true,
@@ -468,6 +454,10 @@ module.exports = {
           { phone: { $regex: req.query.key, $options: "i" } },
           { rank_type: { $regex: req.query.key, $options: "i" } },
         ]
+      }
+      if (!req.query.limit) {
+        let users = await User.find(cond, '-password')
+        return response.ok(res, users);
       }
       const { page = 1, limit = 20 } = req.query;
       let users = await User.find(cond, '-password')
