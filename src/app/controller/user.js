@@ -346,7 +346,7 @@ module.exports = {
       let u = await User.findById(userId)
       console.log(u)
       if (u.refferal_uniquecode) {
-        let refferal = await RefferelCode.findById(u.refferal_uniquecode);
+        let refferal = await RefferelCode.findOne({ name: u.refferal_uniquecode });
         let inviterUser = await User.findById(refferal.inviter_user);
         let refferalBonus = u[refferal.invitee_ticket_type] + payload[refferal.invitee_ticket_type]
         if (refferal && refferalBonus >= 10) {
