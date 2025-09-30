@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const RefferelHistory = mongoose.model("RefferelHistory");
 const response = require("./../responses");
+const RefferelCode = mongoose.model("RefferelCode");
 const ShortUniqueId = require("short-unique-id");
 
 
@@ -11,7 +12,9 @@ module.exports = {
             // const { randomUUID } = new ShortUniqueId({ length: 10 });
             payload.inviter_user = req.user.id;
             // payload.code = randomUUID()
-            payload.code = payload.refferal
+
+            const ref = await RefferelCode.findById(payload.refferal)
+            payload.code = ref.name
             let history = new RefferelHistory(payload);
             await history.save();
             return response.ok(res, history);
