@@ -26,21 +26,12 @@ module.exports = {
       let user2 = await User.findOne({
         email: payload.email.toLowerCase(),
       });
-      //   const user = await User.findOne({ phone: payload.phone });
-      //   if (user) {
-      //     return res.status(404).json({
-      //       success: false,
-      //       message: "Phone number already exists.",
-      //     });
-      //   }
       if (user2) {
         return res.status(404).json({
           success: false,
           message: "Email Id already exists.",
         });
       } else {
-
-
         let user = new User({
           username: payload?.username,
           email: payload?.email,
@@ -53,48 +44,17 @@ module.exports = {
         user.password = user.encryptPassword(req.body.password);
 
         if (payload.uniquecode) {
-          let uniqueCode = await RefferelHistory.findOne({ code: payload.uniquecode })
-          if (uniqueCode) {
-            let refferal = await RefferelCode.findById(uniqueCode.refferal);
-            if (refferal) {
-              if (refferal.invitee_user && refferal.invitee_user.length > 0) {
-                refferal.invitee_user.push(user._id);
-              } else {
-                refferal.invitee_user = [user._id]
-              }
-              if (uniqueCode) {
-                user.refferal_uniquecode = payload.uniquecode
-                // uniqueCode.status = 'Completed';
-                uniqueCode.invitee_user = user._id;
-                // let inviterUser = await User.findById(uniqueCode.inviter_user);
-
-                // let wallet = {
-                //   Bronze: 0,
-                //   Silver: 0,
-                //   Gold: 0,
-                //   Platinam: 0,
-                //   Diamond: 0
-                // }
-                // wallet[refferal.invitee_ticket_type] = refferal.invitee_tickets;
-                // user.wallet = wallet
-                await uniqueCode.save();
-                // if (refferal.inviter_user && refferal.inviter_user.length > 0) {
-                //   if (refferal.inviter_user.includes(uniqueCode.inviter_user)) {
-                //   } else {
-                //     refferal.inviter_user.push(uniqueCode.inviter_user);
-
-                //   }
-                // } else {
-                //   refferal.inviter_user = [uniqueCode.inviter_user]
-                // }
-                // await inviterUser.save();
-              }
-              await refferal.save()
+          let refferal = await RefferelCode.findOne({ name: payload.uniquecode });
+          if (refferal) {
+            if (refferal.invitee_user && refferal.invitee_user.length > 0) {
+              refferal.invitee_user.push(user._id);
             } else {
-              return response.conflict(res, { message: 'Invalid refferal code' });
+              refferal.invitee_user = [user._id]
             }
+
+            await refferal.save()
           } else {
-            return res.status(404).json({ success: false, message: 'Invalid refferal code.' });
+            return response.conflict(res, { message: 'Invalid refferal code' });
           }
         }
         await user.save();
@@ -345,6 +305,7 @@ module.exports = {
     try {
       let u = await User.findById(userId)
       console.log(u)
+
       if (u.refferal_uniquecode) {
         let refferal = await RefferelCode.findOne({ name: u.refferal_uniquecode });
         let inviterUser = await User.findById(refferal.inviter_user);
@@ -361,7 +322,7 @@ module.exports = {
           } else {
             refferal.invitee_user = [u._id]
           }
-          u.refferal_uniquecode = '';
+          // u.refferal_uniquecode = '';
           await u.save();
           await refferal.save()
           payload[refferal.invitee_ticket_type] = payload[refferal.invitee_ticket_type] + refferal.invitee_tickets
