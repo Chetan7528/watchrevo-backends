@@ -42,10 +42,14 @@ module.exports = {
 
         });
         user.password = user.encryptPassword(req.body.password);
-
+        console.log('payload------------>', payload)
         if (payload.uniquecode) {
+
           let refferal = await RefferelCode.findOne({ name: payload.uniquecode });
+
+          console.log('-------refferal---------->', refferal)
           if (refferal) {
+            user.refferal_uniquecode = payload.uniquecode
             if (refferal.invitee_user && refferal.invitee_user.length > 0) {
               refferal.invitee_user.push(user._id);
             } else {
@@ -57,7 +61,8 @@ module.exports = {
             return response.conflict(res, { message: 'Invalid refferal code' });
           }
         }
-        await user.save();
+        console.log(user)
+        // await user.save();
         return res.status(200).json({ success: true, data: user });
       }
     } catch (error) {
@@ -322,7 +327,7 @@ module.exports = {
           } else {
             refferal.invitee_user = [u._id]
           }
-          // u.refferal_uniquecode = '';
+          u.refferal_uniquecode = '';
           await u.save();
           await refferal.save()
           payload[refferal.invitee_ticket_type] = payload[refferal.invitee_ticket_type] + refferal.invitee_tickets
