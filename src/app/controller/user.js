@@ -62,7 +62,7 @@ module.exports = {
           }
         }
         console.log(user)
-        // await user.save();
+        await user.save();
         return res.status(200).json({ success: true, data: user });
       }
     } catch (error) {
