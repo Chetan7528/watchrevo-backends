@@ -447,5 +447,13 @@ module.exports = {
       return response.error(res, error);
     }
   },
-
+  deleteUser: async (req, res) => {
+    // Implement user deletion logic here
+    try {
+      await User.findByIdAndDelete(req.params.id)
+    } catch (error) {
+      return response.error(res, error);
+    }
+    return response.ok(res, { message: "User deleted." });
+  }
 };

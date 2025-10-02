@@ -38,6 +38,12 @@ router.get(
     isAuthenticated(["ADMIN"]),
     user.getAllUserForAdmin
 );
+
+router.delete(
+    "/user/delete/:id",
+    isAuthenticated(["ADMIN"]),
+    user.deleteUser
+);
 // router.get('/updatemanyuser', user.updateManyusers)  // reset all user data === danzer zone
 // router.get('/updatemanyLottery', lottery.updateManyLottery)  // reset all lattery data === danzer zone
 
