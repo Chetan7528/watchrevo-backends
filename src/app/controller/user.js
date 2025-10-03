@@ -13,6 +13,7 @@ const RefferelHistory = mongoose.model("RefferelHistory");
 const User = mongoose.model("User");
 const Verification = mongoose.model("Verification");
 const Device = mongoose.model("Device");
+const TicketHistory = mongoose.model("TicketHistory");
 
 module.exports = {
 
@@ -310,7 +311,13 @@ module.exports = {
     try {
       let u = await User.findById(userId)
       console.log(u)
-
+      let tType = []
+      for (let key in payload) {
+        if (payload.hasOwnProperty(key) && payload[key] > 0 && key != 'amount') {
+          console.log(key, payload[key]);
+          tType = [key, payload[key]]
+        }
+      }
       if (u.refferal_uniquecode) {
         let refferal = await RefferelCode.findOne({ name: u.refferal_uniquecode });
         let inviterUser = await User.findById(refferal.inviter_user);
@@ -327,6 +334,25 @@ module.exports = {
           } else {
             refferal.invitee_user = [u._id]
           }
+          await TicketHistory.create({
+            ticket_type: tType[0],
+            tickets: tType[1],
+            user: userId,
+            refferCode: u.refferal_uniquecode,
+            inviter: inviterUser._id,
+            type: "Bonus"
+          })
+          if (refferal.inviter_tickets > 0) {
+            await TicketHistory.create({
+              ticket_type: tType[0],
+              tickets: refferal.inviter_tickets,
+              user: inviterUser._id,
+              refferCode: u.refferal_uniquecode,
+              inviter: inviterUser._id,
+              type: "Bonus"
+            })
+          }
+
           u.refferal_uniquecode = '';
           await u.save();
           await refferal.save()
@@ -358,6 +384,58 @@ module.exports = {
         }
       );
       delete data.password;
+
+
+      await TicketHistory.create({
+        ticket_type: tType[0],
+        tickets: tType[1],
+        user: userId,
+        type: "Sale"
+      })
+      return response.ok(res, data);
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+
+  getTicketHistoryByUser: async (req, res) => {
+    try {
+      const { page = 1, limit = 20 } = req.query;
+      const history = await TicketHistory.find({ user: req.params.id }).populate('user inviter', 'username phone email').limit(limit * 1)
+        .skip((page - 1) * limit);
+      const totalItems = await TicketHistory.countDocuments({ user: req.params.id });
+      const totalPages = Math.ceil(totalItems / limit);
+      const data = {
+        history: history,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: page,
+          itemsPerPage: limit,
+        },
+      }
+      return response.ok(res, data);
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+
+  getTicketHistoryByRefferal: async (req, res) => {
+    try {
+      const { page = 1, limit = 20 } = req.query;
+      const history = await TicketHistory.find({ refferCode: req.params.id }).populate('user inviter', 'username phone email').limit(limit * 1)
+        .skip((page - 1) * limit);
+      const totalItems = await TicketHistory.countDocuments({ refferCode: req.params.id });
+      const totalPages = Math.ceil(totalItems / limit);
+      const data = {
+        history: history,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: page,
+          itemsPerPage: limit,
+        },
+      }
       return response.ok(res, data);
     } catch (error) {
       return response.error(res, error);

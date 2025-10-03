@@ -44,6 +44,18 @@ router.delete(
     isAuthenticated(["ADMIN"]),
     user.deleteUser
 );
+
+router.get(
+    "/ticket/history/:id",
+    isAuthenticated(["ADMIN"]),
+    user.getTicketHistoryByUser
+);
+
+router.get(
+    "/ticket/history/refferal/:id",
+    isAuthenticated(["ADMIN"]),
+    user.getTicketHistoryByRefferal
+);
 // router.get('/updatemanyuser', user.updateManyusers)  // reset all user data === danzer zone
 // router.get('/updatemanyLottery', lottery.updateManyLottery)  // reset all lattery data === danzer zone
 
