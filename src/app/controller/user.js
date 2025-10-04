@@ -390,7 +390,7 @@ module.exports = {
         ticket_type: tType[0],
         tickets: tType[1],
         user: userId,
-        type: "Sale"
+        type: "Buy"
       })
       return response.ok(res, data);
     } catch (error) {
