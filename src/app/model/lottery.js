@@ -56,6 +56,10 @@ const lotterySchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    show_result: {
+        type: Boolean,
+        default: true,
+    },
 },
     { timestamps: true }
 )
