@@ -411,6 +411,7 @@ module.exports = {
                         from: "lotteries", // collection to compare
                         let: { userTickets: "$ticketnumber" },
                         pipeline: [
+                            { $match: { "show_result": true } },
                             { $unwind: "$prize" }, // unwind to access each prize
                             // {
                             //     $lookup: {
@@ -659,8 +660,9 @@ module.exports = {
     updateManyLottery: async (req, res) => {
         try {
             const payload = {
-                soldTicket: 0,
-                latestTicketNumber: 0,
+                // soldTicket: 0,
+                // latestTicketNumber: 0,
+                show_result: true
             }
             const user = await lottery.updateMany({}, payload);
             return response.ok(res, {
