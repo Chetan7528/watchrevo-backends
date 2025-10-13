@@ -7,6 +7,7 @@ const moment = require("moment");
 const { notify } = require("../services/notification");
 const User = mongoose.model("User");
 const Notification = mongoose.model("Notification");
+const { Transform } = require('stream');
 
 const rankData = {
     'Bronze': 10000,
@@ -145,7 +146,7 @@ module.exports = {
                 ]
             }
             const { page = 1, limit = 20 } = req.query;
-            let Lottery = await lottery.find(cond)
+            let Lottery = await lottery.find(cond, '-prize.winnersUser')
                 .populate('prize.product', 'name image')
                 .sort({ createdAt: -1 })
                 .limit(limit * 1)
@@ -179,12 +180,43 @@ module.exports = {
 
     getLotteryById: async (req, res) => {
         try {
-            let product = await lottery.findById(req?.params?.id).populate('prize.product', 'name image');
+            let product = await lottery.findById(req?.params?.id);
             return response.ok(res, product);
         } catch (error) {
             return response.error(res, error);
         }
     },
+
+
+    getLotteryByIdForChooseWinner: async (req, res) => {
+        try {
+            const result = await lottery.aggregate([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(req.params.id)
+                    }
+                },
+                {
+                    $unwind: "$prize"
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        type: "$prize.type",
+                        prizeNumber: "$prize.prizeNumber",
+                        point: "$prize.point",
+                        person: "$prize.person",
+                        totalWinners: { $size: "$prize.winnersUser" }
+                    }
+                }
+            ]);
+
+            return response.ok(res, result);
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+
 
     updateLottery: async (req, res) => {
         try {
@@ -263,6 +295,113 @@ module.exports = {
 
                 )
             }
+            return response.ok(res, product);
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+    onlynotifyuser: async (req, res) => {
+        try {
+            const payload = req?.params || {};
+            let product = await lottery.findById(payload?.id);
+            let item = product.prize.find(f => f.prizeNumber === payload.ticket)
+            // if (payload.choosewinner) {
+            let result = await requestLottery.aggregate([
+                {
+                    $match: {
+                        ticketnumber: { $in: item.winnersUser }
+                    }
+                },
+                {
+                    $project: {
+                        user: 1,
+                        matchingTickets: {
+                            $size: {
+                                $filter: {
+                                    input: '$ticketnumber',
+                                    as: 'ticket',
+                                    cond: { $in: ['$$ticket', item.winnersUser] }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $match: {
+                        matchingTickets: { $gt: 0 } // optional, filters users who have at least 1 matching ticket
+                    }
+                }
+            ]);
+            result.map(async users => {
+                if (item.type === 'product') {
+                    let des = `🎉 Congratulations for winning this round of the lottery no. ${product.slug}! you win ${item.prizeNumber} prize as a ${item.product_name} product. Please update your address if you have not updated. Thank you — better luck next time! 🍀`;
+                    await Notification.create({
+                        notification: des,
+                        users_type: 'USER',
+                        lottery: product._id,
+                        type: 'lottery',
+                        users: [users.user]
+                    });
+                    await notify([users.user], `🏆 We have a Winner!`, des);
+                }
+
+                if (item.type === 'point') {
+                    let des = `🎉 Congratulations for winning this round of the lottery no. ${product.slug}! you win ${item.prizeNumber} prize as a ${product.rank_type} tickets. Your ${users.matchingTickets} ticket number has include in this. Thank you — better luck next time! 🍀`;
+                    await Notification.create({
+                        notification: des,
+                        users_type: 'USER',
+                        lottery: product._id,
+                        type: 'lottery',
+                        users: [users.user]
+                    });
+                    await notify([users.user], `🏆 We have a Winner!`, des);
+                    const updateField = `wallet.${product.rank_type}`;
+                    console.log(Number(item.point), users.matchingTickets)
+                    const totalPoints = Number((Number(item.point) * Number(users.matchingTickets)).toFixed(1))
+                    console.log(totalPoints)
+                    await User.findByIdAndUpdate(users.user, {
+                        $inc: {
+                            [updateField]: totalPoints
+                        }
+                    })
+                }
+            })
+            // }
+            await lottery.updateOne(
+                {
+                    _id: new mongoose.Types.ObjectId(payload.id),
+                    "prize.prizeNumber": payload.ticket
+                },
+                {
+                    "prize.$.isNotify": true
+                }
+            );
+            return response.ok(res, product);
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+
+    updateLotteryByPrizenumber: async (req, res) => {
+        try {
+            const payload = req?.body || {};
+
+
+            const product = await lottery.updateOne(
+                {
+                    _id: new mongoose.Types.ObjectId(payload.id),
+                    "prize.prizeNumber": payload.prizeNumber
+                },
+                {
+                    // $push: {
+                    //     "prize.$.winnersUser": {
+                    //         $each: payload.prize
+                    //     }
+                    // }
+                    "prize.$.winnersUser": payload.prize
+                }
+            );
+
             return response.ok(res, product);
         } catch (error) {
             return response.error(res, error);
@@ -368,6 +507,7 @@ module.exports = {
                 Lottery = await requestLottery.find({ user: req.user.id }).populate('lottery', 'slug').sort({ createdAt: -1 });
 
             }
+
             return response.ok(res, Lottery)
         } catch (error) {
             return response.error(res, error)
@@ -376,7 +516,36 @@ module.exports = {
 
     getRequestLotteryById: async (req, res) => {
         try {
-            let product = await requestLottery.find({ lottery: req?.params?.id }).populate('user', 'name phone');
+            // let product = await requestLottery.find({ lottery: req?.params?.id }, '-ticketnumber').populate('user', 'name phone');
+            // return response.ok(res, product);
+
+            let Lottery = []
+            if (req.query.limit && req.query.page) {
+                let skip = (req.query.page - 1) * req.query.limit;
+                Lottery = await requestLottery.find({ lottery: req?.params?.id }, '-ticketnumber').populate('user', 'name phone').skip(skip).limit(req.query.limit);
+
+            } else {
+                Lottery = await requestLottery.find({ lottery: req?.params?.id }, '-ticketnumber').populate('user', 'name phone');
+            }
+            const totalItems = await requestLottery.countDocuments({ lottery: req?.params?.id });
+            const totalPages = Math.ceil(totalItems / req.query.limit);
+            const data = {
+                Lottery,
+                pagination: {
+                    totalItems,
+                    totalPages,
+                    currentPage: req.query.page,
+                    itemsPerPage: req.query.limit,
+                },
+            }
+            return response.ok(res, data)
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+    getRequestById: async (req, res) => {
+        try {
+            let product = await requestLottery.findById(req?.params?.id);
             return response.ok(res, product);
         } catch (error) {
             return response.error(res, error);
@@ -385,12 +554,156 @@ module.exports = {
 
     getTicketNumber: async (req, res) => {
         try {
-            const Lottery = await requestLottery.aggregate([
-                { $match: { lottery: new mongoose.Types.ObjectId(req.params.id) } },
-                { $project: { _id: 0, ticketnumber: 1 } }, // Include only ticketnumber and exclude _id
-                { $unwind: "$ticketnumber" } // Flatten the ticketnumber array
-            ]);;
+            // const Lottery = await requestLottery.aggregate([
+            //     { $match: { lottery: new mongoose.Types.ObjectId(req.params.id) } },
+            //     { $project: { _id: 0, ticketnumber: 1 } }, // Include only ticketnumber and exclude _id
+            //     { $unwind: "$ticketnumber" } // Flatten the ticketnumber array
+            // ]);
+            const ticketNumbers = await requestLottery.find({ lottery: req.params.id }, 'ticketnumber')
+            const Lottery = ticketNumbers.flatMap(h => h.ticketnumber);
+            // console.log(ticketNumbers)
             return response.ok(res, Lottery)
+        } catch (error) {
+            return response.error(res, error)
+        }
+    },
+
+    // getTicketNumberBywinnerRank: async (req, res) => {
+    //     try {
+    //         const result = await lottery.aggregate([
+    //             { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } },
+    //             {
+    //                 $project: {
+    //                     prize: {
+    //                         $filter: {
+    //                             input: "$prize",
+    //                             as: "p",
+    //                             cond: { $eq: ["$$p.prizeNumber", req.params.rank] } // match prizeNumber 4
+    //                         }
+    //                     },
+    //                     // _id: 0 // optional: hide _id
+    //                 }
+    //             }
+    //         ]);
+
+    //         return response.ok(res, result[0])
+    //     } catch (error) {
+    //         return response.error(res, error)
+    //     }
+    // },
+
+    getTicketNumberBywinnerRank: async (req, res) => {
+        try {
+            const { id, rank } = req.params;
+            const { page = 1, limit = 50 } = req.query; // pagination from query params
+
+            const skip = (Number(page) - 1) * Number(limit);
+
+            const result = await lottery.aggregate([
+                { $match: { _id: new mongoose.Types.ObjectId(id) } },
+                {
+                    $project: {
+                        prize: {
+                            $filter: {
+                                input: "$prize",
+                                as: "p",
+                                cond: { $eq: ["$$p.prizeNumber", rank] }
+                            }
+                        }
+                    }
+                },
+                { $unwind: "$prize" }, // unwrap single prize element
+                {
+                    $project: {
+                        _id: 1,
+                        "prize.type": 1,
+                        "prize.prizeNumber": 1,
+                        "prize.point": 1,
+                        "prize.person": 1,
+                        "prize.isNotify": 1,
+                        totalWinners: { $size: "$prize.winnersUser" },
+                        "prize.winnersUser": {
+                            $slice: ["$prize.winnersUser", skip, Number(limit)]
+                        }
+                    }
+                }
+            ]);
+
+            return response.ok(res, result[0]);
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+
+    getwinnerByrandom: async (req, res) => {
+        try {
+            const trnaformdata = new Transform({ objectMode: true })
+            trnaformdata.isWritten = false;
+            trnaformdata._transform = function (chunk, encoding, callback) {
+                if (!this.isWritten) {
+                    this.isWritten = true;
+                    callback(null, '[' + JSON.stringify(chunk))
+                } else {
+                    callback(null, ',' + JSON.stringify(chunk))
+                }
+            }
+            trnaformdata._flush = function (callback) {
+                callback(null, ']')
+            }
+            const results = await lottery.findOne(
+                { _id: new mongoose.Types.ObjectId(req.params.id) },
+                { "prize.winnersUser": 1, _id: 0 }
+            );
+            const usedTickets = results.prize.flatMap(p => p.winnersUser);
+            console.log(usedTickets);
+
+            const result = await requestLottery
+                .aggregate([
+                    {
+                        $match: {
+                            lottery: new mongoose.Types.ObjectId(req.params.id),
+                            // ticketnumber: { $nin: usedTickets } // skip used
+                        },
+                    },
+                    { $unwind: "$ticketnumber" },
+                    {
+                        $match: {
+                            ticketnumber: { $nin: [...usedTickets, ...req.body.used] } // apply again after unwind (needed!)
+                        },
+                    },
+                    { $sample: { size: Number(req.params.capacity) } },
+                    {
+                        $project: {
+                            _id: 0,
+                            ticketnumber: 1,
+                            // user: 1,
+                        },
+                    },
+                ]).allowDiskUse(true) // ✅ must come BEFORE await
+                .cursor().pipe(trnaformdata); // ✅ ensure query execution in some Mongoose versions
+            result.pipe(res)
+            // return response.ok(res, result);
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+
+
+    getTicketNumberBySearch: async (req, res) => {
+        try {
+            // const Lottery = await requestLottery.aggregate([
+            //     { $match: { lottery: new mongoose.Types.ObjectId(req.params.id) } },
+            //     { $project: { _id: 0, ticketnumber: 1 } }, // Include only ticketnumber and exclude _id
+            //     { $unwind: "$ticketnumber" } // Flatten the ticketnumber array
+            // ]);
+            let cond = {
+                lottery: req.params.id,
+                ticketnumber: { $in: req.params.ticket }
+            };
+            const ticketNumbers = await requestLottery.find(cond, 'ticketnumber')
+            // const Lottery = ticketNumbers.flatMap(h => h.ticketnumber);
+            // console.log(ticketNumbers)
+            return response.ok(res, ticketNumbers)
         } catch (error) {
             return response.error(res, error)
         }

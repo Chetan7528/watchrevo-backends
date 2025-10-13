@@ -31,6 +31,10 @@ const lotterySchema = new mongoose.Schema({
             winnersUser: [{
                 type: String
             }],
+            isNotify: {
+                type: Boolean,
+                default: false,
+            },
         }
     ],
     slug: {

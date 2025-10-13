@@ -32,5 +32,7 @@ const lotteryrequestchema = new mongoose.Schema({
 //         return ret;
 //     }
 // });
+lotteryrequestchema.index({ lottery: 1 });
+lotteryrequestchema.index({ "ticketnumber": 1 });
 
 module.exports = mongoose.model('LotteryRequest', lotteryrequestchema);

@@ -133,19 +133,26 @@ router.get("/getLotteryForAdmin", lottery.getLotteryForAdmin)
 router.get("/getAllLottery", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getAllLottery)
 router.delete("/deleteLottery/:id", lottery.deleteLottery);
 router.get("/getLotteryById/:id", lottery.getLotteryById);
+router.get("/getLotteryByIdForChooseWinner/:id", lottery.getLotteryByIdForChooseWinner);
 router.post("/updateLottery", lottery.updateLottery);
+router.post("/updateLotteryByPrizenumber", lottery.updateLotteryByPrizenumber)
+router.get("/getTicketNumberBySearch/:id/:ticket", lottery.getTicketNumberBySearch)
+router.get("/onlynotifyuser/:id/:ticket", lottery.onlynotifyuser)
+
 
 // lottery request
 router.post("/requestLottery", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.requestLottery);
 router.get("/getRequestLottery", lottery.getRequestLottery);
 router.get("/getRequestLotteryByUser", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getRequestLotteryByUser);
 router.get("/getRequestLotteryById/:id", lottery.getRequestLotteryById);
+router.get("/getRequestById/:id", lottery.getRequestById);
 router.get("/getTicketNumber/:id", lottery.getTicketNumber);
 router.get("/getLotteryWinnerListByUser", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getLotteryWinnerListByUser);
 router.get("/getLotteryAllWinners", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getLotteryAllWinners);
 // router.get("/getLotteryproductWinners/:id", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getLotteryproductWinners);
 router.get('/getLotteryproductWinners/:id', isAuthenticated(["ADMIN"]), lottery.getLotteryproductWinners)
-
+router.post("/getwinnerByrandom/:id/:capacity", isAuthenticated(["USER", "ADMIN", "SELLER"]), lottery.getwinnerByrandom);
+router.get("/getTicketNumberBywinnerRank/:id/:rank", isAuthenticated(["ADMIN"]), lottery.getTicketNumberBywinnerRank);
 //Notification
 
 router.post("/notification/create", isAuthenticated(["USER", "ADMIN", "SELLER"]), notification.create);
