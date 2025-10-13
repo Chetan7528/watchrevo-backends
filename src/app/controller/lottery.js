@@ -797,6 +797,7 @@ module.exports = {
                 },
                 {
                     $match: {
+                        "show_result": true,
                         "prize.type": "product"
                     }
                 },
@@ -810,6 +811,7 @@ module.exports = {
                         pipeline: [
                             {
                                 $match: {
+
                                     $expr: {
                                         $and: [
                                             { $eq: ["$lottery", "$$lotteryId"] },
