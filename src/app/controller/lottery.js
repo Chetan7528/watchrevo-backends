@@ -367,6 +367,8 @@ module.exports = {
                 }
             })
             // }
+            product.show_result = true;
+            await product.save();
             await lottery.updateOne(
                 {
                     _id: new mongoose.Types.ObjectId(payload.id),
@@ -420,21 +422,22 @@ module.exports = {
             if (Number(user.wallet[product.rank_type]) < Number(payload.total)) {
                 return response.conflict(res, { message: 'There are not enough tickets.' });
             }
-            const currentTickets = Number(product.capacity) - Number(product.soldTicket);
+            const currentTickets = Number(product.prize_capacity) - Number(product.soldTicket);
             if (Number(currentTickets) < Number(payload.quantity)) {
                 return response.conflict(res, { message: `The lottery has only ${currentTickets} tickets. You can't buy more then it.` });
             }
 
             payload.user = req.user?.id
             // console.log(payload)
+
             let ticketnumbers = []
-            for (i = product.latestTicketNumber; i < product.latestTicketNumber + payload.quantity; i++) {
+            for (i = product.latestTicketNumber; i < product.latestTicketNumber + payload.total; i++) {
                 let slug = product._id.toString().replace(/[0-9&., ]/g, '')
                 let numberT = slug + '_' + (Number(i) + 1)
                 ticketnumbers.push(numberT)
             }
-            product.latestTicketNumber = (Number(product.latestTicketNumber) + Number(payload.quantity));
-            product.soldTicket = Number(product.soldTicket) + Number(payload.quantity)
+            product.latestTicketNumber = (Number(product.latestTicketNumber) + Number(payload.total));
+            product.soldTicket = Number(product.soldTicket) + Number(payload.total)
             await product.save();
             payload.ticketnumber = ticketnumbers;
             let cat = new requestLottery(payload);
@@ -453,7 +456,7 @@ module.exports = {
             user[user.rank_type] = Number(user[user.rank_type]) + Number(payload.total);
             user.wallet[product.rank_type] = Number(user.wallet[product.rank_type]) - Number(payload.total);
             console.log(user)
-            if (product.soldTicket === product.capacity) {
+            if (product.soldTicket === product.prize_capacity) {
                 let userList = []
                 const allLottery = await requestLottery.find({ lottery: product._id });
                 userList = allLottery.map(f => f.user);
