@@ -91,31 +91,35 @@ module.exports = {
                 {
                     $match: cond
                 },
+                // {
+                //     $addFields: {
+                //         sortOrder: {
+                //             $switch: {
+                //                 branches: [
+                //                     { case: { $eq: ["$rank_type", "Bronze"] }, then: 1 },
+                //                     { case: { $eq: ["$rank_type", "Silver"] }, then: 2 },
+                //                     { case: { $eq: ["$rank_type", "Gold"] }, then: 3 },
+                //                     { case: { $eq: ["$rank_type", "Platinam"] }, then: 4 },
+                //                     { case: { $eq: ["$rank_type", "Diamond"] }, then: 5 },
+                //                 ],
+                //                 default: 999
+                //             }
+                //         }
+                //     }
+                // },
+                // {
+                //     $sort: { sortOrder: 1 }
+                // },
                 {
-                    $addFields: {
-                        sortOrder: {
-                            $switch: {
-                                branches: [
-                                    { case: { $eq: ["$rank_type", "Bronze"] }, then: 1 },
-                                    { case: { $eq: ["$rank_type", "Silver"] }, then: 2 },
-                                    { case: { $eq: ["$rank_type", "Gold"] }, then: 3 },
-                                    { case: { $eq: ["$rank_type", "Platinam"] }, then: 4 },
-                                    { case: { $eq: ["$rank_type", "Diamond"] }, then: 5 },
-                                ],
-                                default: 999
-                            }
-                        }
-                    }
-                },
-                {
-                    $sort: { sortOrder: 1 }
+                    $sort: { createdAt: -1 }
                 },
                 {
                     $skip: skip
                 },
                 {
                     $limit: Number(req.query.limit) || 10
-                }
+                },
+
             ]);
 
 
