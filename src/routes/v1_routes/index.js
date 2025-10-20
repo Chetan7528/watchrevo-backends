@@ -58,6 +58,9 @@ router.get(
 );
 // router.get('/updatemanyuser', user.updateManyusers)  // reset all user data === danzer zone
 // router.get('/updatemanyLottery', lottery.updateManyLottery)  // reset all lattery data === danzer zone
+// router.get('/updateManyLotteryForEvery', lottery.updateManyLotteryForEvery)  // reset all lattery data === danzer zone
+// router.get("/updateAllLotteryReuest/:slug", lottery.updateAllLotteryReuest); // reset all lattery data === danzer zone
+
 
 router.post(
     "/fileupload",

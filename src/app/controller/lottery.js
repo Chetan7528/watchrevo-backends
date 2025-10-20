@@ -8,6 +8,7 @@ const { notify } = require("../services/notification");
 const User = mongoose.model("User");
 const Notification = mongoose.model("Notification");
 const { Transform } = require('stream');
+const lotteryRequest = require("../model/lottery-request");
 
 const rankData = {
     'Bronze': 10000,
@@ -78,7 +79,9 @@ module.exports = {
                     }
                 }
             }
-            let cond = {};
+            let cond = {
+                $expr: { $ne: ["$capacity", "$soldTicket"] }
+            };
             let skip = 0;
             if (req.query.limit) {
                 skip = (Number(req.query.page) - 1) * Number(req.query.limit);
@@ -994,4 +997,136 @@ module.exports = {
             return response.error(res, error);
         }
     },
+
+
+    updateAllLotteryReuest: async (req, res) => {
+        try {
+            const product = await lottery.findOne({ slug: req.params.slug });
+            product.soldTicket = 0;
+            product.latestTicketNumber = 0;
+            const ltryReq = await lotteryRequest.find({ lottery: product._id });
+
+            if (ltryReq && ltryReq.length > 0) {
+                // await Promise.all(
+                ltryReq.forEach(async (payload) => {
+                    console.log(Number(payload.total), Number(payload.ticketnumber.length))
+                    // if (Number(payload.total) > Number(payload.ticketnumber.length)) {
+
+                    payload.total = Number(payload.quantity) * Number(product.price)
+                    console.log(payload.total)
+                    // console.log(Number(user.wallet[product.rank_type]), Number(payload.total))
+
+                    // const currentTickets = Number(product.prize_capacity) - Number(product.soldTicket);
+
+
+                    // payload.user = req.user?.id
+                    // console.log(payload)
+
+                    let ticketnumbers = []
+                    let newTickets = payload.total
+                    for (i = product.latestTicketNumber; i < product.latestTicketNumber + newTickets; i++) {
+                        let slug = product._id.toString().replace(/[0-9&., ]/g, '')
+                        let numberT = slug + '_' + (Number(i) + 1)
+                        ticketnumbers.push(numberT)
+                    }
+                    product.latestTicketNumber = (Number(product.latestTicketNumber) + Number(newTickets));
+                    product.soldTicket = Number(product.soldTicket) + Number(newTickets)
+
+                    payload.ticketnumber = ticketnumbers;
+                    // payload.ticketnumber = [...payload.ticketnumber, ...ticketnumbers]
+                    // let cat = new requestLottery(payload);
+                    console.log('in pppppppp->', product.soldTicket)
+                    await requestLottery.findByIdAndUpdate(payload._id, payload)
+                    // }
+
+                })
+                // )
+                console.log('out------->', product.soldTicket)
+                await lottery.findByIdAndUpdate(product._id, product);
+            }
+
+
+
+
+
+
+            return response.ok(res, {
+                message: "Updated SuccessFully",
+            });
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+
+    updateManyLotteryForEvery1: async (req, res) => {
+        try {
+            const user = await lottery.find();
+            user.forEach(async (ele) => {
+                const ltr = await lottery.findById(ele._id);
+                let totalPersons = ltr.prize.reduce((sum, item) => sum + Number(item.person || 0), 0);
+                ltr.capacity = totalPersons;
+                ltr.prize_capacity = totalPersons;
+                const ltrrquest = await lotteryRequest.find({ lottery: ele._id });
+                let totalItems = ltrrquest.reduce((sum, item) => sum + Number(item.total || 0), 0);
+                // if (ltr.latestTicketNumber > 0) {
+                ltr.soldTicket = totalItems || 0;
+                ltr.latestTicketNumber = totalItems || 0;
+                // }
+                await ltr.save()
+            })
+            return response.ok(res, {
+                message: "Updated successfully.",
+            });
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+
+    updateManyLotteryForEvery: async (req, res) => {
+        try {
+            let chunkSize = 100000
+            const user = await lottery.find({ prize_capacity: { $gt: chunkSize } });
+            console.log(user)
+            user.forEach(async (ele) => {
+                if (ele.prize_capacity > chunkSize) {
+
+                    // let totalPersons = ltr.prize.reduce((sum, item) => sum + Number(item.person || 0), 0);
+                    ele.prize.forEach(el => {
+                        if (el.person > chunkSize) {
+                            // let mainq = el.person - chunkSize;
+                            el.person = chunkSize
+                            let capacity = Number(el.person) - chunkSize
+                            let prizeNumber = el.prizeNumber
+                            const chunks = [];
+                            let remaining = capacity;
+                            while (remaining > 0) {
+                                const current = Math.min(chunkSize, remaining);
+                                chunks.push(current);
+                                delete el._id
+                                el.prizeNumber = prizeNumber + 1;
+                                el.person
+                                ltr.prize.push(current)
+                                remaining -= current;
+                            }
+                            console.log(chunks);
+
+                        }
+                    })
+                    await lottery.findByIdAndUpdate(ele._id, ele);
+                    console.log('updateddddddd')
+                    //  await ltr.save()
+                }
+
+
+
+
+            })
+            return response.ok(res, {
+                message: "Updated successfully.",
+            });
+        } catch (error) {
+            return response.error(res, error);
+        }
+    },
+
 }
