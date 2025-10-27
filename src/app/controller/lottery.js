@@ -80,7 +80,7 @@ module.exports = {
                 }
             }
             let cond = {
-                $expr: { $ne: ["$capacity", "$soldTicket"] }
+                // $expr: { $ne: ["$capacity", "$soldTicket"] }
             };
             let skip = 0;
             if (req.query.limit) {
@@ -821,13 +821,17 @@ module.exports = {
                         pipeline: [
                             {
                                 $match: {
-
                                     $expr: {
                                         $and: [
                                             { $eq: ["$lottery", "$$lotteryId"] },
                                             { $in: ["$$winnerUserId", "$ticketnumber"] }
                                         ]
                                     }
+                                }
+                            },
+                            {
+                                $project: {
+                                    ticketnumber: 0
                                 }
                             }
                         ],
