@@ -423,10 +423,11 @@ module.exports = {
 
             const user = await User.findById(req.user.id);
             let product = await lottery.findById(payload?.lottery);
+            console.log(product, "AAAAAAA")
             payload.total = Number(payload.quantity) * Number(product.price)
             console.log(payload.total)
             console.log(Number(user.wallet[product.rank_type]), Number(payload.total))
-            if (Number(user.wallet[product.rank_type]) < Number(payload.total)) {
+            if (!user.wallet[product.rank_type] || Number(user.wallet[product.rank_type]) < Number(payload.total)) {
                 return response.conflict(res, { message: 'There are not enough tickets.' });
             }
             const currentTickets = Number(product.prize_capacity) - Number(product.soldTicket);
@@ -453,16 +454,19 @@ module.exports = {
 
             // user.totalspent_yen = Number(user.totalspent_yen) + Number(payload.total);
             // user.spent_yen = Number(user.spent_yen) + Number(payload.total);
-            if (user.rank_type !== 'Diamond') {
-                if (rankData[user.rank_type] < user.spent_yen) {
-                    user.spent_yen = 0
-                    user.rankedDate = new Date()
-                    user.rank_type = nextRank[user.rank_type]
+            if (product.rank_type !== 'Free') {
+                if (user.rank_type !== 'Diamond') {
+                    if (rankData[user.rank_type] < user.spent_yen) {
+                        user.spent_yen = 0
+                        user.rankedDate = new Date()
+                        user.rank_type = nextRank[user.rank_type]
+                    }
                 }
+                user[user.rank_type] = Number(user[user.rank_type]) + Number(payload.total);
             }
-            user[user.rank_type] = Number(user[user.rank_type]) + Number(payload.total);
             user.wallet[product.rank_type] = Number(user.wallet[product.rank_type]) - Number(payload.total);
             console.log(user)
+
             if (product.soldTicket === product.prize_capacity) {
                 let userList = []
                 const allLottery = await requestLottery.find({ lottery: product._id });

@@ -9,7 +9,7 @@ const ticketHistorySchema = new mongoose.Schema(
     {
         ticket_type: {
             type: String,
-            enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'],
+            enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Free'],
             default: 'Bronze'
         },
         tickets: {

@@ -79,7 +79,8 @@ const userSchema = new mongoose.Schema(
         Silver: 0,
         Gold: 0,
         Platinam: 0,
-        Diamond: 0
+        Diamond: 0,
+        Free: 0,
       }
     },
     Bronze: {
@@ -99,6 +100,10 @@ const userSchema = new mongoose.Schema(
       default: 0
     },
     Diamond: {
+      type: Number,
+      default: 0
+    },
+    Free: {
       type: Number,
       default: 0
     },

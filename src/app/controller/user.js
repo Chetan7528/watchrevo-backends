@@ -43,12 +43,12 @@ module.exports = {
 
         });
         user.password = user.encryptPassword(req.body.password);
-        console.log('payload------------>', payload)
+        // console.log('payload------------>', payload)
         if (payload.uniquecode) {
 
           let refferal = await RefferelCode.findOne({ name: payload.uniquecode });
 
-          console.log('-------refferal---------->', refferal)
+          // console.log('-------refferal---------->', refferal)
           if (refferal) {
             user.refferal_uniquecode = payload.uniquecode
             if (refferal.invitee_user && refferal.invitee_user.length > 0) {
@@ -62,7 +62,7 @@ module.exports = {
             return response.conflict(res, { message: 'Invalid refferal code' });
           }
         }
-        console.log(user)
+        // console.log(user)
         await user.save();
         return res.status(200).json({ success: true, data: user });
       }
@@ -72,7 +72,7 @@ module.exports = {
   },
 
   login: (req, res) => {
-    console.log("request came here");
+    // console.log("request came here");
     passport.authenticate("local", async (err, user, info) => {
       if (err) {
         return response.error(res, err);
@@ -279,7 +279,7 @@ module.exports = {
 
   fileUploadFromEditor: async (req, res) => {
     try {
-      console.log(req.body)
+      // console.log(req.body)
       let key = req.file && req.file.key;
       return response.ok(res, {
         message: "File uploaded.",
@@ -310,11 +310,11 @@ module.exports = {
 
     try {
       let u = await User.findById(userId)
-      console.log(u)
+      // console.log(u)
       let tType = []
       for (let key in payload) {
         if (payload.hasOwnProperty(key) && payload[key] > 0 && key != 'amount') {
-          console.log(key, payload[key]);
+          // console.log(key, payload[key]);
           tType = [key, payload[key]]
         }
       }
@@ -324,7 +324,7 @@ module.exports = {
         let refferalBonus = u[refferal.invitee_ticket_type] + payload[refferal.invitee_ticket_type]
         if (refferal && refferalBonus >= 10) {
           let wallet = inviterUser.wallet
-          console.log(wallet)
+          // console.log(wallet)
           wallet[refferal.inviter_ticket_type] = wallet[refferal.inviter_ticket_type] + refferal.inviter_tickets;
           inviterUser.wallet = wallet
           await User.findByIdAndUpdate(inviterUser._id, inviterUser);
@@ -369,13 +369,15 @@ module.exports = {
             'wallet.Gold': payload.Gold,
             'wallet.Platinam': payload.Platinam,
             'wallet.Diamond': payload.Diamond,
+            'wallet.Free': payload.Free,
             'Bronze': payload.Bronze,
             'Silver': payload.Silver,
             'Gold': payload.Gold,
             'Platinam': payload.Platinam,
             'Diamond': payload.Diamond,
-            'spent_yen': payload.amount,
-            'totalspent_yen': payload.amount,
+            'Free': payload.Free,
+            'spent_yen': tType[0] === 'Free' ? 0 : payload.amount,
+            'totalspent_yen': tType[0] === 'Free' ? 0 : payload.amount,
           },
         },
         {
