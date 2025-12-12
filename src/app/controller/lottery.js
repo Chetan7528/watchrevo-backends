@@ -431,8 +431,8 @@ module.exports = {
                 return response.conflict(res, { message: 'There are not enough tickets.' });
             }
             const currentTickets = Number(product.prize_capacity) - Number(product.soldTicket);
-            if (Number(currentTickets) < Number(payload.quantity)) {
-                return response.conflict(res, { message: `The lottery has only ${currentTickets} tickets. You can't buy more then it.` });
+            if (Number(currentTickets) < Number(payload.total)) {
+                return response.conflict(res, { message: `The lottery has only ${Number(currentTickets) / Number(product.price)} tickets. You can't buy more then it.` });
             }
 
             payload.user = req.user?.id
